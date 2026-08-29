@@ -144,7 +144,7 @@ PASS: reaction-diffusion fields, mechanisms and visualizations are valid
 
 本案例已在独立数据盘工作目录从空目录完整复现。128² 主数值积分在两次测试中约需 7.76–10.29 秒（运行时间随共享机器负载变化）；GIF 渲染时间更长。
 
-## 3.2 输出数据与分阶段命令
+## 3.2 输出数据
 
 ```text
 artifacts/
@@ -167,20 +167,64 @@ artifacts/
 
 HDF5 中 `u` 和 `v` 的形状均为 `(101,128,128)`，另外保存 `x、y、t` 坐标以及 $D_u,D_v,k$、随机种子、边界和求解器信息。
 
-## 分阶段复现与排错
+## 3.3 分阶段运行
+
+需要单独调试初值、积分器或可视化时，可在同一个终端中依次执行下面三段命令。分阶段命令与 3.1 节的一键脚本使用相同代码，但输入输出更加明确。请为新实验指定新的 `WORK_ROOT`。
+
+### 3.3.1 前处理
 
 ```bash
-export REPO="$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo/PDEBench"
-export CONFIG="$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo/artifacts/resolved_config.yaml"
-export ART="$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo/artifacts"
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
+cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
+export REPO="$WORK_ROOT/PDEBench"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
 
-PYTHONPATH="$REPO" python src/simulate_reaction_diffusion.py --output "$ART/reaction_diffusion.h5" --config "$CONFIG" --repo "$REPO"
-python src/analyze_and_visualize.py --data "$ART/reaction_diffusion.h5" --output "$ART/results"
-PYTHONPATH="$REPO" python src/resolution_study.py --reference-data "$ART/reaction_diffusion.h5" --config "$CONFIG" --output "$ART/results"
-python src/verify_results.py "$ART/reaction_diffusion.h5" "$ART/results"
+bash scripts/setup_workspace.sh "$WORK_ROOT"
+mkdir -p "$ART/results"
+cp configs/default.yaml "$CONFIG"
 ```
 
-`pipeline.log` 会保存四个阶段的完整控制台输出；`simulation_info.json` 保存 Python/NumPy/SciPy 版本、PDEBench 提交、配置和主求解时间；两个 metrics JSON 分别保存物理诊断与网格研究。
+[`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 克隆并固定 PDEBench，验证反应–扩散模拟器可以导入；[`configs/default.yaml`](configs/default.yaml) 定义网格、边界、随机种子、扩散系数和输出时刻。前处理输出 `$REPO`、`$CONFIG` 和空的结果目录。
+
+### 3.3.2 算法运行
+
+```bash
+PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_reaction_diffusion.py" \
+  --output "$ART/reaction_diffusion.h5" \
+  --config "$CONFIG" \
+  --repo "$REPO"
+```
+
+[`src/simulate_reaction_diffusion.py`](src/simulate_reaction_diffusion.py) 调用 PDEBench 的稀疏 Laplace 算子和 RK45 积分流程，输出 `$ART/reaction_diffusion.h5` 与 `$ART/simulation_info.json`。该阶段只生成 $u,v$ 数值场，不渲染图片。
+
+### 3.3.3 后处理
+
+```bash
+python "$CASE_DIR/src/analyze_and_visualize.py" \
+  --data "$ART/reaction_diffusion.h5" \
+  --output "$ART/results"
+PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
+  --reference-data "$ART/reaction_diffusion.h5" \
+  --config "$CONFIG" \
+  --output "$ART/results"
+python "$CASE_DIR/src/verify_results.py" \
+  "$ART/reaction_diffusion.h5" "$ART/results"
+```
+
+后处理代码及职责如下：
+
+| 代码 | 输入 | 输出与作用 |
+|---|---|---|
+| [`src/analyze_and_visualize.py`](src/analyze_and_visualize.py) | `reaction_diffusion.h5` | 双场、相图、机制、频谱等 6 张图，GIF 与 `physical_metrics.json` |
+| [`src/pdebench_operators.py`](src/pdebench_operators.py) | HDF5 网格和边界参数 | 为机制诊断与网格研究复现 PDEBench 的离散 Laplace 算子 |
+| [`src/resolution_study.py`](src/resolution_study.py) | HDF5、配置和官方求解器 | 三网格结果、`resolution_metrics.json` 和网格研究图 |
+| [`src/verify_results.py`](src/verify_results.py) | HDF5 与 `results/` | 检查字段、边界通量、误差趋势和全部图像，成功时输出 `PASS` |
+
+只修改图形样式、谱分析或物理指标时，可以单独重跑后处理。需要从前处理到验收完整自动执行时，仍可使用 3.1 节的 [`scripts/run_pipeline.sh`](scripts/run_pipeline.sh)；`pipeline.log` 会记录完整控制台输出。
 
 # 4. 后处理与物理分析
 

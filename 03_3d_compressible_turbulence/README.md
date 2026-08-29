@@ -199,7 +199,64 @@ bash scripts/run_pipeline.sh \
 
 本机在全新纯 CPU 环境中生成 `1×3×32×32×32` 的五个场，首次 JAX 编译、求解和 NPY 写盘为 `42.592 s`，HDF5 为 `1.45 MiB`；质量漂移为 `0`，总能量漂移为 `8.788×10⁻⁷`，全部物理图、GIF 和自动验收通过。墙钟时间会随 CPU 型号和共享负载变化。
 
-## 3.3 一键 GPU 快速测试
+## 3.3 CPU 分阶段运行
+
+一键脚本适合完整复现；需要单独检查官方求解、数据转换或三维可视化时，可在同一个终端中依次执行以下三段命令。请为新实验指定新的 `WORK_ROOT`，避免覆盖已有 HDF5。
+
+### 3.3.1 前处理
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
+cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu-staged"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
+export JAX_PLATFORMS=cpu
+export PYTHONPYCACHEPREFIX="$WORK_ROOT/python-cache"
+export MPLCONFIGDIR="$WORK_ROOT/matplotlib-cache"
+
+bash scripts/setup_workspace.sh "$WORK_ROOT" configs/cpu.yaml
+cp configs/cpu.yaml "$CONFIG"
+```
+
+前处理由 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 完成：固定 PDEBench 提交、核验上游工作树、检查 JAX CPU 后端和依赖，并创建缓存与输出目录。[`configs/cpu.yaml`](configs/cpu.yaml) 定义 $32^3$ 网格、单样本、3 个输出时刻和关闭性能测试的 CPU 默认参数；[`src/jax_loc_compat.py`](src/jax_loc_compat.py) 在运行时兼容固定上游代码使用的旧版 JAX 更新接口，不修改 PDEBench 源文件。
+
+### 3.3.2 算法运行
+
+```bash
+python "$CASE_DIR/src/run_official.py" \
+  --config "$CONFIG" \
+  --work-dir "$ART" \
+  --mode dataset
+```
+
+[`src/run_official.py`](src/run_official.py) 将配置转换成 Hydra 覆盖参数，加载运行时兼容层并调用官方 `CFD_multi_Hydra.py`。该阶段输出 `$ART/raw_dataset/` 下的密度、三分量速度、压力与时间坐标 NPY 文件，以及 `$ART/dataset_run.json`；此时尚未合并 HDF5，也不生成图片。
+
+### 3.3.3 后处理
+
+```bash
+python "$CASE_DIR/src/convert_dataset.py" \
+  --config "$CONFIG" --work-dir "$ART"
+python "$CASE_DIR/src/postprocess.py" \
+  --config "$CONFIG" --work-dir "$ART"
+python "$CASE_DIR/src/verify_results.py" \
+  --config "$CONFIG" --work-dir "$ART"
+```
+
+后处理代码及职责如下：
+
+| 代码 | 输入 | 输出与作用 |
+|---|---|---|
+| [`src/convert_dataset.py`](src/convert_dataset.py) | `raw_dataset/*.npy` 与配置 | 校验五场形状和时间坐标，生成 `cfd3d_dataset.h5` 与 `dataset_info.json` |
+| [`src/common.py`](src/common.py) | HDF5 三维场 | 提供涡量、散度、守恒量和球壳能谱等公共计算 |
+| [`src/postprocess.py`](src/postprocess.py) | HDF5 与配置 | 生成三正交切片、等值面、守恒诊断、能谱、GIF 和 `physical_metrics.json` |
+| [`src/verify_results.py`](src/verify_results.py) | HDF5、指标和图像 | 检查五场、正密度/压力、守恒漂移、非零涡量和文件完整性，成功时输出 `PASS` |
+
+仅调整等值面阈值、色标或物理诊断时，可以从 `postprocess.py` 开始重跑；原始 NPY 已存在而 HDF5 需要重建时，可以从 `convert_dataset.py` 开始。需要完整自动执行时，仍可使用 3.2 节的 [`scripts/run_pipeline.sh`](scripts/run_pipeline.sh)。
+
+## 3.4 一键 GPU 快速测试
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -213,7 +270,7 @@ bash scripts/run_pipeline.sh \
 
 本机 smoke 复现得到 `8×3×32×32×32`，首次编译、计算和写盘为 `43.330 s`，最终自动验收 PASS。
 
-## 3.4 一键 GPU 正式运行
+## 3.5 一键 GPU 正式运行
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -235,7 +292,7 @@ bash scripts/run_pipeline.sh \
 4. 计算涡量、速度散度、守恒量和三维能谱；
 5. 生成静态图、11 帧 GIF 和自动验收 JSON。
 
-## 3.5 GPU 正式数据生成结果
+## 3.6 GPU 正式数据生成结果
 
 | 项目 | 实测值 |
 |---|---:|
@@ -248,7 +305,7 @@ bash scripts/run_pipeline.sh \
 
 这里的 `61.862 s` 包含 Python 启动、JAX 编译、初值生成、时间推进、设备到主机传输和五个 NPY 文件写出，不能解释为纯算子时间。
 
-## 3.6 1/2/4/8 GPU 实测
+## 3.7 1/2/4/8 GPU 实测
 
 固定总工作量为 8 个样本、$48^3$、$t=0\to0.05$。每个 GPU 组先执行一次不计入统计的 warm-up，再对两次完整进程运行取中位数。计时仍包含启动、初值、求解、回传和 NPY 写出。
 

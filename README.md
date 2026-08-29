@@ -2,7 +2,7 @@
 
 当前案例集包含三个物理与计算主题互补的主案例，以及两个附录。三个主案例都生成 PDE 数值解，不训练神经网络，因此没有 epoch 或 loss 曲线；Burgers/FNO 附录才包含 50 epoch 的模型训练。
 
-面向成果展示和连续阅读的正式版本见：[PDEBench 科学计算案例整合文档](PDEBENCH_INTEGRATED_CASES.md)。该文档从 PDEBench 的功能与应用出发，将三个主案例统一组织为“案例描述—前处理—算法设计与并行优化—后处理”。
+面向成果展示和连续阅读的正式版本见：[PDEBench 科学计算案例整合文档](PDEBENCH_INTEGRATED_CASES.md)。该文档从 PDEBench 的功能与应用出发，将三个主案例统一组织为“案例描述—前处理—算法设计与并行优化—后处理”，并只给出可独立执行的前处理、算法运行和后处理命令。各案例独立文档同时保留分阶段命令与一键流水线。
 
 ## 获取代码
 
@@ -36,7 +36,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 
 - 数据盘 Conda 环境创建命令和 `environment.yml`；
 - 固定 PDEBench 提交 `4ff3e3a4aa1561721b5571fa3a048a0a463e0568`；
-- YAML 参数配置、快速/正式运行入口和一键流水线；
+- YAML 参数配置、前处理/算法运行/后处理命令和一键流水线；
 - 大体积 HDF5、日志、JSON/CSV 统一写入 `/home/ubuntu/data`；
 - 展示用 PNG/GIF、逐图物理解释和机器可读 PASS/FAIL；
 - 三个主案例均提供可在普通 CPU 环境执行的默认复现路径。

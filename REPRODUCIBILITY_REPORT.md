@@ -1,6 +1,6 @@
 # 复现测试与参考案例对照报告
 
-本报告记录截至 2026-08-29 的实际执行证据。案例一、二沿用此前从空工作目录完成的复现；案例三重新创建 CUDA JAX 环境，并分别执行 smoke、正式 1/2/4/8 GPU 流水线以及最终版本的空目录 smoke 回归。所有环境、HDF5、原始数组、缓存和日志均位于 `/home/ubuntu/data`。
+本报告记录截至 2026-08-29 的实际执行证据。除一键流水线测试外，三个主案例还分别从新的空目录按“前处理—算法运行—后处理”命令完整执行，验证各阶段可以独立调用。所有环境、HDF5、原始数组、缓存和日志均位于 `/home/ubuntu/data`。
 
 ## 与 `ref-case` 的结构对照
 
@@ -15,6 +15,7 @@
 | 从零创建环境 | 独立 `environment.yml`，前缀位于数据盘 | 已实测 |
 | 参数配置和规模分档 | default/smoke；3D 另有 highres_128 | 已覆盖 |
 | 固定源码版本 | `4ff3e3a4...`，setup 检查提交和干净工作树 | 已实测 |
+| 分阶段命令 | 前处理、算法运行、后处理均有独立命令、代码入口和输入输出 | 已实测 |
 | 一键命令 | 每个主案例均有 `run_pipeline.sh` | 已覆盖 |
 | 日志和机器可读结果 | HDF5、JSON、CSV、pipeline.log | 已覆盖 |
 | 图文与动画 | 每图解释物理含义；三个主案例均有 GIF | 已覆盖 |
@@ -30,8 +31,12 @@
 |---|---|
 | 浅水波环境 | `/home/ubuntu/data/pdebench-case-envs/swe` |
 | 浅水波完整复现 | `/home/ubuntu/data/pdebench-full-repro/swe` |
+| 浅水波分阶段复现 | `/home/ubuntu/data/pdebench-swe-staged-doc-test-20260829` |
 | 反应–扩散环境 | `/home/ubuntu/data/pdebench-case-envs/reacdiff` |
 | 反应–扩散完整复现 | `/home/ubuntu/data/pdebench-full-repro/reacdiff` |
+| 反应–扩散分阶段复现 | `/home/ubuntu/data/pdebench-reacdiff-staged-doc-test-20260829` |
+| 3D CFD CPU 环境 | `/home/ubuntu/data/pdebench-case-envs/cfd3d-cpu` |
+| 3D CFD CPU 分阶段复现 | `/home/ubuntu/data/pdebench-cfd3d-cpu-staged-doc-test-20260829` |
 | 3D CFD 新环境 | `/home/ubuntu/data/pdebench-case-envs/cfd3d` |
 | 3D CFD 首次失败证据 | `/home/ubuntu/data/pdebench-cfd3d-smoke/artifacts/logs/dataset.log` |
 | 3D CFD smoke PASS | `/home/ubuntu/data/pdebench-cfd3d-smoke-02/artifacts` |
@@ -47,6 +52,7 @@
 - 质量漂移 `4.79×10⁻¹⁰`，旋转相对 L1 误差 `4.80×10⁻⁴`；
 - 32²→64² 相对 L2 从 `0.02015` 降到 `0.01202`，观测阶 `0.745`；
 - 自动验收 10 项全部为 `true`，最终 PASS。
+- 2026-08-29 分阶段复测的主求解用时为 `1.223 s`，后处理与验收再次 PASS。
 
 ## 案例二：反应–扩散
 
@@ -55,6 +61,7 @@
 - 场相关系数从 `0.0004226` 增长到 `0.938024`；
 - 32²→64² 后，$u$ 相对 L2 从 `0.3608` 降到 `0.1355`，$v$ 从 `0.2424` 降到 `0.09759`；
 - 自动验收 9 项全部为 `true`，最终 PASS。
+- 2026-08-29 分阶段复测的主积分用时为 `10.272 s`，后处理与验收再次 PASS。
 
 ## 案例三：3D 可压缩湍流
 
@@ -68,6 +75,7 @@
 - 质量漂移 `0`，总能量漂移 `8.788×10⁻⁷`；
 - 静态图、GIF 和自动验收全部 PASS；
 - 独立工作目录：`/home/ubuntu/data/pdebench-cfd3d-cpu-clean-env-test/artifacts`。
+- 2026-08-29 从新目录按三个阶段复测，官方数据阶段用时 `44.132 s`，转换、全部图像/GIF 与验收再次 PASS。
 
 ### 环境和官方代码兼容
 

@@ -226,22 +226,65 @@ HDF5 中各数组均有明确物理意义：
 | `x`, `y` | `(128,)` | 网格中心坐标 |
 | `t` | `(101,)` | 输出时间 |
 
-## 3.4 分阶段复现与排错
+## 3.4 分阶段运行
 
-一键脚本实际执行的核心命令如下；适合在某一步失败时单独重跑。`${REPO}` 指向数据盘内固定提交的 PDEBench 源码，`${CONFIG}` 指向配置副本。
+需要分别调试数据准备、数值求解或后处理时，可在同一个终端中依次执行下面三段命令。分阶段命令与一键脚本调用相同的 Python 程序；区别是每一步的输入输出都显式给出，便于修改配置后只重跑受影响的阶段。请使用新的 `WORK_ROOT`，避免覆盖已有 HDF5。
+
+### 3.4.1 前处理
+
+这一阶段固定 PDEBench 源码版本、验证 Clawpack 求解器、建立数据盘工作目录，并把默认参数复制成此次实验的不可变配置记录。
 
 ```bash
-export REPO="$PDEBENCH_CASE_DATA/pdebench-swe-demo/PDEBench"
-export CONFIG="$PDEBENCH_CASE_DATA/pdebench-swe-demo/artifacts/resolved_config.yaml"
-export ART="$PDEBENCH_CASE_DATA/pdebench-swe-demo/artifacts"
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
+cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-swe-staged"
+export REPO="$WORK_ROOT/PDEBench"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
 
-PYTHONPATH="$REPO" python src/simulate_shallow_water.py --output "$ART/radial_dam_break.h5" --config "$CONFIG" --repo "$REPO"
-python src/analyze_and_visualize.py --data "$ART/radial_dam_break.h5" --output "$ART/results"
-PYTHONPATH="$REPO" python src/resolution_study.py --reference-data "$ART/radial_dam_break.h5" --config "$CONFIG" --output "$ART/results"
-python src/verify_results.py "$ART/radial_dam_break.h5" "$ART/results"
+bash scripts/setup_workspace.sh "$WORK_ROOT"
+mkdir -p "$ART/results"
+cp configs/default.yaml "$CONFIG"
 ```
 
-流水线正常结束时，`pipeline.log` 保留上述四阶段的参数、运行时间、完整 JSON 指标和每一项验收布尔值，可直接用于复现实验审计。
+前处理入口是 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh)，参数来源是 [`configs/default.yaml`](configs/default.yaml)。输出为固定提交的 `$REPO`、结果目录 `$ART/results` 和配置副本 `$CONFIG`。
+
+### 3.4.2 算法运行
+
+```bash
+PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_shallow_water.py" \
+  --output "$ART/radial_dam_break.h5" \
+  --config "$CONFIG" \
+  --repo "$REPO"
+```
+
+[`src/simulate_shallow_water.py`](src/simulate_shallow_water.py) 从 `$CONFIG` 读取网格、终止时间和物理参数，调用 `$REPO` 中的官方 `RadialDamBreak2D`，输出 `$ART/radial_dam_break.h5` 和 `$ART/simulation_info.json`。此阶段只求解并保存数值场，不生成图片。
+
+### 3.4.3 后处理
+
+```bash
+python "$CASE_DIR/src/analyze_and_visualize.py" \
+  --data "$ART/radial_dam_break.h5" \
+  --output "$ART/results"
+PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
+  --reference-data "$ART/radial_dam_break.h5" \
+  --config "$CONFIG" \
+  --output "$ART/results"
+python "$CASE_DIR/src/verify_results.py" \
+  "$ART/radial_dam_break.h5" "$ART/results"
+```
+
+后处理代码及职责如下：
+
+| 代码 | 输入 | 输出与作用 |
+|---|---|---|
+| [`src/analyze_and_visualize.py`](src/analyze_and_visualize.py) | `radial_dam_break.h5` | `physical_metrics.json`、5 张物理图和 GIF |
+| [`src/resolution_study.py`](src/resolution_study.py) | HDF5、配置和官方求解器 | 32²/64²/128² 网格结果、`resolution_metrics.json` 和网格研究图 |
+| [`src/verify_results.py`](src/verify_results.py) | HDF5 与 `results/` | 检查字段、正水深、守恒、误差趋势和全部图像，成功时输出 `PASS` |
+
+只调整画图样式或诊断方法时，可以直接重跑本节命令，不必再次运行浅水波求解。需要完整自动执行时，仍可使用 3.2 节的 [`scripts/run_pipeline.sh`](scripts/run_pipeline.sh)；其 `pipeline.log` 会保存各步骤的控制台输出。
 
 # 4. 后处理与物理分析
 

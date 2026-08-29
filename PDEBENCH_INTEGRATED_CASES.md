@@ -119,15 +119,53 @@ $$
 
 该 $128^2$ 任务的单次求解约为秒级，官方入口为单进程 PyClaw。本案例不对小网格进行形式化 MPI 拆分，也不报告不适用的并行加速比。计算优化体现在调用已编译的 Roe 内核、一次求解保存全部场、向量化后处理以及用 32²/64²/128² 三网格量化精度—成本关系。大批量生成不同坝高或半径样本时，各样本互不依赖，可进一步在任务层并行。
 
-完整数值、后处理、网格研究和验收由以下命令执行：
+案例按前处理、算法运行和后处理三个阶段执行。以下命令应在同一个终端中依次运行，以便复用路径变量。
+
+**前处理：固定源码并准备配置。** 对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。该阶段把固定版本 PDEBench 放到数据盘，并生成本次实验独立使用的配置副本。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
-bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-swe-demo"
-bash scripts/run_pipeline.sh "$PDEBENCH_CASE_DATA/pdebench-swe-demo"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-swe-staged"
+export REPO="$WORK_ROOT/PDEBench"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
+
+bash scripts/setup_workspace.sh "$WORK_ROOT"
+mkdir -p "$ART/results"
+cp configs/default.yaml "$CONFIG"
 ```
+
+**算法运行：生成浅水波数值场。** [`src/simulate_shallow_water.py`](01_radial_dam_break/src/simulate_shallow_water.py) 调用官方 PyClaw 求解器，输出 `radial_dam_break.h5` 和 `simulation_info.json`。
+
+```bash
+PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_shallow_water.py" \
+  --output "$ART/radial_dam_break.h5" \
+  --config "$CONFIG" \
+  --repo "$REPO"
+```
+
+**后处理：物理诊断、可视化、网格研究和验收。** [`src/analyze_and_visualize.py`](01_radial_dam_break/src/analyze_and_visualize.py) 生成物理指标、PNG 和 GIF；[`src/resolution_study.py`](01_radial_dam_break/src/resolution_study.py) 完成三网格研究；[`src/verify_results.py`](01_radial_dam_break/src/verify_results.py) 检查字段、守恒量和图像是否齐全。
+
+```bash
+python "$CASE_DIR/src/analyze_and_visualize.py" \
+  --data "$ART/radial_dam_break.h5" \
+  --output "$ART/results"
+PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
+  --reference-data "$ART/radial_dam_break.h5" \
+  --config "$CONFIG" \
+  --output "$ART/results"
+python "$CASE_DIR/src/verify_results.py" \
+  "$ART/radial_dam_break.h5" "$ART/results"
+```
+
+| 阶段 | 对应代码 | 主要输出 |
+|---|---|---|
+| 前处理 | `scripts/setup_workspace.sh`、`configs/default.yaml` | 固定版本源码、`resolved_config.yaml` |
+| 算法运行 | `src/simulate_shallow_water.py` | `radial_dam_break.h5`、`simulation_info.json` |
+| 后处理 | `src/analyze_and_visualize.py`、`src/resolution_study.py`、`src/verify_results.py` | 物理指标、网格指标、PNG、GIF、PASS/FAIL |
 
 ### 2.4 后处理与结果分析
 
@@ -227,15 +265,53 @@ $$
 
 本案例保持官方单进程算法，使用稀疏矩阵—向量乘法和 NumPy 向量化避免 Python 网格循环。三网格结果用于说明自由度与显式扩散稳定性共同造成的成本增长。若需要生成大量随机样本，可按随机种子在进程或节点间进行样本级并行；这与把单个二维网格做空间域分解是不同的并行层次。
 
-完整流程执行命令为：
+案例同样分三个阶段执行，以下命令应在同一个终端中依次运行。
+
+**前处理：固定源码、建立工作目录并冻结配置。** 对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
-bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
-bash scripts/run_pipeline.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
+export REPO="$WORK_ROOT/PDEBench"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
+
+bash scripts/setup_workspace.sh "$WORK_ROOT"
+mkdir -p "$ART/results"
+cp configs/default.yaml "$CONFIG"
 ```
+
+**算法运行：生成两个耦合场。** [`src/simulate_reaction_diffusion.py`](02_reaction_diffusion/src/simulate_reaction_diffusion.py) 调用 PDEBench 的反应–扩散离散与 RK45 时间积分，输出 `reaction_diffusion.h5` 和 `simulation_info.json`。
+
+```bash
+PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_reaction_diffusion.py" \
+  --output "$ART/reaction_diffusion.h5" \
+  --config "$CONFIG" \
+  --repo "$REPO"
+```
+
+**后处理：机制分解、频谱、网格研究和验收。** [`src/analyze_and_visualize.py`](02_reaction_diffusion/src/analyze_and_visualize.py) 生成相图、反应/扩散强度、频谱、PNG 和 GIF；[`src/pdebench_operators.py`](02_reaction_diffusion/src/pdebench_operators.py) 复现上游离散算子；[`src/resolution_study.py`](02_reaction_diffusion/src/resolution_study.py) 和 [`src/verify_results.py`](02_reaction_diffusion/src/verify_results.py) 分别完成网格一致性与自动验收。
+
+```bash
+python "$CASE_DIR/src/analyze_and_visualize.py" \
+  --data "$ART/reaction_diffusion.h5" \
+  --output "$ART/results"
+PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
+  --reference-data "$ART/reaction_diffusion.h5" \
+  --config "$CONFIG" \
+  --output "$ART/results"
+python "$CASE_DIR/src/verify_results.py" \
+  "$ART/reaction_diffusion.h5" "$ART/results"
+```
+
+| 阶段 | 对应代码 | 主要输出 |
+|---|---|---|
+| 前处理 | `scripts/setup_workspace.sh`、`configs/default.yaml` | 固定版本源码、`resolved_config.yaml` |
+| 算法运行 | `src/simulate_reaction_diffusion.py` | `reaction_diffusion.h5`、`simulation_info.json` |
+| 后处理 | `src/analyze_and_visualize.py`、`src/pdebench_operators.py`、`src/resolution_study.py`、`src/verify_results.py` | 机制/网格指标、PNG、GIF、PASS/FAIL |
 
 ### 3.4 后处理与结果分析
 
@@ -337,16 +413,51 @@ $32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已�
 
 CPU 流程仍调用 PDEBench 的官方 JAX 求解器。JAX 首次运行会编译数组计算图，随后以已编译算子完成通量、重构和时间推进；三维网格运算由数组表达式完成，避免逐网格 Python 循环。默认只计算一个样本，从而能够在单个 CPU 设备上执行，也不会进入多设备性能测试。配置将性能测试设为关闭，但仍完整执行数据转换、守恒诊断、三维等值面、能谱、GIF 和自动验收。
 
-完整正式流程执行命令为：
+案例默认采用 CPU 后端，并按三个阶段执行。以下命令应在同一个终端中依次运行。
+
+**前处理：固定源码、检查 CPU 后端并冻结配置。** 对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。兼容层在运行时适配旧版 JAX 更新语法，不修改下载的 PDEBench 源码。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
-bash scripts/run_pipeline.sh \
-  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu" \
-  configs/cpu.yaml
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu-staged"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
+export JAX_PLATFORMS=cpu
+export PYTHONPYCACHEPREFIX="$WORK_ROOT/python-cache"
+export MPLCONFIGDIR="$WORK_ROOT/matplotlib-cache"
+
+bash scripts/setup_workspace.sh "$WORK_ROOT" configs/cpu.yaml
+cp configs/cpu.yaml "$CONFIG"
 ```
+
+**算法运行：调用官方三维 CFD 求解器。** [`src/run_official.py`](03_3d_compressible_turbulence/src/run_official.py) 读取配置并调用固定版本 PDEBench，生成密度、三分量速度、压力和时间坐标等原始 NPY 文件。
+
+```bash
+python "$CASE_DIR/src/run_official.py" \
+  --config "$CONFIG" \
+  --work-dir "$ART" \
+  --mode dataset
+```
+
+**后处理：格式转换、三维诊断、可视化和验收。** [`src/convert_dataset.py`](03_3d_compressible_turbulence/src/convert_dataset.py) 把原始 NPY 合并为 HDF5；[`src/postprocess.py`](03_3d_compressible_turbulence/src/postprocess.py) 计算涡量、散度、守恒量和动能谱，并生成切片、等值面和 GIF；[`src/verify_results.py`](03_3d_compressible_turbulence/src/verify_results.py) 完成自动验收。
+
+```bash
+python "$CASE_DIR/src/convert_dataset.py" \
+  --config "$CONFIG" --work-dir "$ART"
+python "$CASE_DIR/src/postprocess.py" \
+  --config "$CONFIG" --work-dir "$ART"
+python "$CASE_DIR/src/verify_results.py" \
+  --config "$CONFIG" --work-dir "$ART"
+```
+
+| 阶段 | 对应代码 | 主要输出 |
+|---|---|---|
+| 前处理 | `scripts/setup_workspace.sh`、`configs/cpu.yaml`、`src/jax_loc_compat.py` | 固定版本源码、CPU 后端检查、`resolved_config.yaml` |
+| 算法运行 | `src/run_official.py` | 五场原始 NPY、`dataset_run.json` |
+| 后处理 | `src/convert_dataset.py`、`src/common.py`、`src/postprocess.py`、`src/verify_results.py` | HDF5、物理指标、PNG、GIF、PASS/FAIL |
 
 CPU 复现生成的每个场形状为 `1×3×32×32×32`，在全新纯 CPU 环境中，首次 JAX 编译、求解和五场 NPY 写盘合计 42.592 s，合并 HDF5 为 1.45 MiB。该时间包含 JAX 编译、初值、计算和 I/O，不等同于纯数值算子时间；换用其他 CPU 后墙钟时间会随核心性能和系统负载变化。
 
@@ -428,19 +539,11 @@ conda env create \
 
 CPU 环境采用 `jax==0.4.38`，不需要 NVIDIA 驱动或 CUDA。固定 PDEBench 提交中的公共边界函数使用历史 `.loc` 更新接口，案例通过运行时兼容层将其等价映射到现代 JAX 的 `.at`；该处理不改变索引和数值公式，也不修改脚本自动下载的 PDEBench 上游文件。
 
-### 5.3 快速验证和验收依据
+### 5.3 分阶段复现和验收依据
 
-三维案例的 CPU 默认流程为：
+三个案例均按各案例正文给出的“前处理—算法运行—后处理”命令执行。前处理只需对一个新的 `WORK_ROOT` 执行一次；修改参数时应复制配置文件，算法与后处理阶段始终读取同一份 `resolved_config.yaml`。如果只需要重新出图，可以保留 HDF5 并单独重跑后处理命令，无需再次进行数值求解。
 
-```bash
-conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
-cd 03_3d_compressible_turbulence
-bash scripts/run_pipeline.sh \
-  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu" \
-  configs/cpu.yaml
-```
-
-三个案例的流水线均依次完成数值生成、HDF5 写出、物理诊断、PNG/GIF 和自动验收。验收不仅检查文件存在，还检查字段形状、有限值、正水深或正密度/压力、守恒漂移、网格误差趋势和非零涡量。当前交付版本已经在数据盘独立工作目录完成复现，三个主案例均输出 PASS；详细环境、路径和原始数值记录见[复现测试报告](REPRODUCIBILITY_REPORT.md)。
+后处理验收不仅检查文件存在，还检查字段形状、有限值、正水深或正密度/压力、守恒漂移、网格误差趋势和非零涡量。当前交付版本已经在数据盘独立工作目录完成三阶段复现，三个主案例均输出 PASS；详细环境、路径和原始数值记录见[复现测试报告](REPRODUCIBILITY_REPORT.md)。
 
 ## 6. 总结
 
