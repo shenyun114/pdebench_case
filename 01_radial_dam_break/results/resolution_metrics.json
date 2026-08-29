@@ -1,0 +1,32 @@
+{
+  "study_type": "three-grid self-convergence; finest numerical solution is the reference, not an exact solution",
+  "reference_grid": 128,
+  "rows": [
+    {
+      "grid": 32,
+      "runtime_seconds": 0.15021301433444023,
+      "relative_l1_error_vs_block_averaged_reference": 0.011070999395583243,
+      "relative_l2_error_vs_block_averaged_reference": 0.02015361030860032,
+      "max_relative_mass_drift": 3.469128015157449e-11
+    },
+    {
+      "grid": 64,
+      "runtime_seconds": 0.30657435953617096,
+      "relative_l1_error_vs_block_averaged_reference": 0.0053432319200005145,
+      "relative_l2_error_vs_block_averaged_reference": 0.012022722508510341,
+      "max_relative_mass_drift": 2.1552007151017257e-16
+    },
+    {
+      "grid": 128,
+      "runtime_seconds": 1.20402280241251,
+      "relative_l1_error_vs_block_averaged_reference": 0.0,
+      "relative_l2_error_vs_block_averaged_reference": 0.0,
+      "max_relative_mass_drift": 4.794317299179752e-10
+    }
+  ],
+  "observed_l2_order_between_coarse_grids": 0.7452746787433574,
+  "acceptance": {
+    "l2_error_decreases_with_refinement": true,
+    "all_mass_drifts_below_1e-5": true
+  }
+}

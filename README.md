@@ -1,0 +1,64 @@
+# PDEBench 科学计算示范案例集
+
+当前案例集包含三个物理与计算主题互补的主案例，以及两个附录。三个主案例都生成 PDE 数值解，不训练神经网络，因此没有 epoch 或 loss 曲线；Burgers/FNO 附录才包含 50 epoch 的模型训练。
+
+面向成果展示和连续阅读的正式版本见：[PDEBench 科学计算案例整合文档](PDEBENCH_INTEGRATED_CASES.md)。该文档从 PDEBench 的功能与应用出发，将三个主案例统一组织为“案例描述—前处理—算法设计与并行优化—后处理”。
+
+## 获取代码
+
+```bash
+git clone https://github.com/shenyun114/pdebench_case.git
+cd pdebench_case
+export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的数据盘
+```
+
+案例代码可位于任意普通目录；Conda 环境、自动下载的固定版本 PDEBench、HDF5、日志和缓存写入 `PDEBENCH_CASE_DATA`。
+
+| 内容 | 维度与方程 | 数值/性能重点 | 主要可视化 | 定位 |
+|---|---|---|---|---|
+| [案例一：二维径向溃坝浅水波](01_radial_dam_break/README.md) | 2D 双曲守恒律 | PyClaw Roe、守恒和三网格自收敛 | 水深、波前、速度、Froude 数、自由液面 GIF | 波动与守恒律 |
+| [案例二：二维耦合反应–扩散](02_reaction_diffusion/README.md) | 2D 抛物型双场 | 稀疏 Laplace、RK45、网格一致性 | 双场、反应/扩散平衡、相图、频谱、GIF | 扩散与斑图动力学 |
+| [案例三：三维可压缩湍流与多 GPU](03_3d_compressible_turbulence/README.md) | 3D 可压缩 Navier–Stokes | HLLC–MUSCL、JAX、1/2/4/8 GPU 样本并行 | 三正交切片、等值面、涡量、散度、能谱、GIF | 三维流动与 GPU 数据生成 |
+| [附录 A：Gray–Scott 并行数据生成](appendix_gray_scott/README.md) | 2D 自包含扩展 | NumPy/Numba、线程池、参数扫描 | 斑图、时空图、参数相图 | 与案例二同属反应扩散，故降为扩展附录 |
+| [附录 B：Burgers/FNO 误差与失败模式](appendix_burgers_fno/README.md) | 1D PDE 学习 | PDEBench FNO1d、50 epoch | rollout、RMSE、守恒与频谱误差 | 模型误差反例 |
+
+## 推荐阅读顺序
+
+1. 从二维浅水波理解守恒量、有限体积通量和波前传播；
+2. 用二维反应–扩散理解非守恒双场耦合和斑图尺度；
+3. 进入三维可压缩湍流，理解密度、压力、速度、涡量、散度、能谱以及多 GPU 粒度；
+4. 若需要更多参数扫描与 CPU JIT 内容，再阅读 Gray–Scott 附录；
+5. 最后把 Burgers/FNO 当作“总体 RMSE 不足以代表物理正确”的误差案例。
+
+## 统一交付规范
+
+三个主案例都按“案例描述—前处理—并行优化与数值执行—后处理”组织，并提供：
+
+- 数据盘 Conda 环境创建命令和 `environment.yml`；
+- 固定 PDEBench 提交 `4ff3e3a4aa1561721b5571fa3a048a0a463e0568`；
+- YAML 参数配置、快速/正式运行入口和一键流水线；
+- 大体积 HDF5、日志、JSON/CSV 统一写入 `/home/ubuntu/data`；
+- 展示用 PNG/GIF、逐图物理解释和机器可读 PASS/FAIL；
+- 对“不适用的并行”“样本级并行”和“空间域分解”做明确区分。
+
+[复现测试报告](REPRODUCIBILITY_REPORT.md)记录环境、运行路径、实测指标和源码完整性。[PDEBench 支持案例说明](PDEBENCH_SUPPORTED_CASES.md)列出固定提交还能生成的其他 PDE。
+
+## 一眼看结果
+
+### 二维浅水波：径向重力波与自由液面
+
+动画左侧显示水深，右侧显示速度大小和方向；环形水深波前与速度带同步向外传播。
+
+![二维浅水波演化](01_radial_dam_break/results/shallow_water_evolution.gif)
+
+### 二维反应–扩散：两个浓度场形成耦合空间结构
+
+动画同步显示激活场、恢复场和局部反应源，可观察随机高频初值被平滑并逐渐形成相关相区。
+
+![二维反应扩散演化](02_reaction_diffusion/results/reaction_diffusion_evolution.gif)
+
+### 三维可压缩湍流：密度、涡量和压缩/膨胀同步演化
+
+动画使用固定色标显示中心切片上的密度、涡量模和速度散度，分别对应压缩结构、旋转结构及局部压缩/膨胀。
+
+![三维湍流演化](03_3d_compressible_turbulence/results/turbulence_evolution.gif)

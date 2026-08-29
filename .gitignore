@@ -1,0 +1,29 @@
+# Generated workspaces and numerical data
+artifacts/
+raw_dataset/
+benchmark/
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.pt
+*.pth
+
+# Python and tool caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Local environments and editors
+.venv/
+env/
+.env
+.vscode/
+.idea/
+
+# Logs and platform files
+*.log
+.DS_Store

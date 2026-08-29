@@ -1,0 +1,13 @@
+simulation:
+  nx: 128
+  ny: 128
+  frames: 101
+  final_time: 1.0
+  gravity: 1.0
+  dam_radius: 0.5
+  inner_height: 2.0
+
+resolution_study:
+  coarse_grids: [32, 64]
+  reference_grid: 128
+

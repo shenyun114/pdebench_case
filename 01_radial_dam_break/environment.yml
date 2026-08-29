@@ -1,0 +1,22 @@
+name: pdebench-swe
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip>=24
+  - numpy=1.26
+  - scipy=1.15
+  - h5py=3.13
+  - matplotlib=3.10
+  - pillow>=11
+  - imageio>=2.36
+  - tqdm
+  - hydra-core=1.3
+  - python-dotenv
+  - pyyaml>=6
+  - clawpack=5.9
+  - pytorch=1.13.1
+  - cpuonly
+  - hatchling
+  - hatch-vcs

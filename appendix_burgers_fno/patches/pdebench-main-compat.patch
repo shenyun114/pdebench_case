@@ -1,0 +1,21 @@
+--- a/pdebench/data_gen/data_gen_NLE/BurgersEq/burgers_multi_solution_Hydra.py
++++ b/pdebench/data_gen/data_gen_NLE/BurgersEq/burgers_multi_solution_Hydra.py
+@@ -200,6 +200,6 @@
+     # t-coordinate
+     it_tot = ceil((fin_time - ini_time) / dt_save) + 1
+-    tc = jnp.arange(it_tot + 1) * dt_save
++    tc = jnp.arange(it_tot) * dt_save
+ 
+     @jax.jit
+     def evolve(u):
+--- a/pdebench/data_gen/data_gen_NLE/Data_Merge.py
++++ b/pdebench/data_gen/data_gen_NLE/Data_Merge.py
+@@ -357,7 +357,7 @@
+ 
+ 
+ def transform(type, savedir):
+-    data = Path(savedir).glob("*npy")
++    data = [str(path) for path in Path(savedir).glob("*npy")]
+     data.sort()
+     xcrd = np.load(data[-1])
+     del data[-1]

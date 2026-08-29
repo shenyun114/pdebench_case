@@ -1,0 +1,26 @@
+{
+  "platform": "Linux-5.13.0-30-generic-x86_64-with-glibc2.31",
+  "python": "3.10.20",
+  "shape": [
+    101,
+    128,
+    128,
+    2
+  ],
+  "runtime_seconds": 10.293630242347717,
+  "numpy": "1.26.4",
+  "scipy": "1.15.2",
+  "configuration": {
+    "nx": 128,
+    "ny": 128,
+    "frames": 101,
+    "final_time": 5.0,
+    "du": 0.001,
+    "dv": 0.005,
+    "reaction_k": 0.005,
+    "seed": 7
+  },
+  "config_file": "/home/ubuntu/data/pdebench-full-repro/reacdiff/artifacts/resolved_config.yaml",
+  "pdebench_commit": "4ff3e3a4aa1561721b5571fa3a048a0a463e0568",
+  "solver": "pdebench.data_gen.src.sim_diff_react.Simulator"
+}

@@ -1,0 +1,38 @@
+simulation:
+  nx: 128
+  ny: 128
+  steps: 900
+  save_every: 30
+  dt: 1.0
+  du: 0.16
+  dv: 0.08
+  feed: 0.060
+  kill: 0.062
+  noise: 0.02
+
+dataset:
+  samples: 8
+  seed: 7
+  backend: numba
+  executor: thread
+  workers: 4
+
+benchmark:
+  nx: 96
+  ny: 96
+  steps: 360
+  save_every: 60
+  samples: 8
+  seed: 11
+  repeats: 3
+  workers: [1, 2, 4]
+
+parameter_sweep:
+  nx: 96
+  ny: 96
+  steps: 720
+  save_every: 120
+  seed: 21
+  feeds: [0.035, 0.045, 0.055, 0.065]
+  kills: [0.055, 0.060, 0.065, 0.070]
+

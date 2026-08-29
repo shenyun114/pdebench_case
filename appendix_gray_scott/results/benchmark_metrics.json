@@ -1,0 +1,98 @@
+{
+  "platform": "Linux-5.13.0-30-generic-x86_64-with-glibc2.31",
+  "python": "3.10.21",
+  "numpy": "1.26.4",
+  "method": "median of 3 runs; Numba warmed before measurement",
+  "core_speedup_basis": "ratio of normalized per-cell throughput; Python uses a reduced 48x48x120 case to keep runtime practical",
+  "rows": [
+    {
+      "category": "solver_core",
+      "mode": "python",
+      "grid": "48x48",
+      "steps": 120,
+      "samples": 1,
+      "workers": 1,
+      "repeats": 3,
+      "seconds": 2.8737763029930647,
+      "mcell_updates_per_s": 0.09620790585267319,
+      "speedup": 1.0,
+      "parallel_efficiency": null,
+      "note": "shape=(4, 48, 48, 2)"
+    },
+    {
+      "category": "solver_core",
+      "mode": "numpy",
+      "grid": "96x96",
+      "steps": 360,
+      "samples": 1,
+      "workers": 1,
+      "repeats": 3,
+      "seconds": 0.06590563600184396,
+      "mcell_updates_per_s": 50.34106642878271,
+      "speedup": 523.2529071557996,
+      "parallel_efficiency": null,
+      "note": "shape=(7, 96, 96, 2)"
+    },
+    {
+      "category": "solver_core",
+      "mode": "numba",
+      "grid": "96x96",
+      "steps": 360,
+      "samples": 1,
+      "workers": 1,
+      "repeats": 3,
+      "seconds": 0.054802818020107225,
+      "mcell_updates_per_s": 60.53995250358676,
+      "speedup": 629.2617219659046,
+      "parallel_efficiency": null,
+      "note": "shape=(7, 96, 96, 2)"
+    },
+    {
+      "category": "end_to_end",
+      "mode": "numba_thread_1",
+      "grid": "96x96",
+      "steps": 360,
+      "samples": 8,
+      "workers": 1,
+      "repeats": 3,
+      "seconds": 1.3335720930190291,
+      "mcell_updates_per_s": 19.90299597520242,
+      "speedup": 1.0,
+      "parallel_efficiency": 1.0,
+      "note": "8 samples, end-to-end HDF5 write"
+    },
+    {
+      "category": "end_to_end",
+      "mode": "numba_thread_2",
+      "grid": "96x96",
+      "steps": 360,
+      "samples": 8,
+      "workers": 2,
+      "repeats": 3,
+      "seconds": 1.234672827005852,
+      "mcell_updates_per_s": 21.497257750756507,
+      "speedup": 1.080101597645923,
+      "parallel_efficiency": 0.5400507988229615,
+      "note": "8 samples, end-to-end HDF5 write"
+    },
+    {
+      "category": "end_to_end",
+      "mode": "numba_thread_4",
+      "grid": "96x96",
+      "steps": 360,
+      "samples": 8,
+      "workers": 4,
+      "repeats": 3,
+      "seconds": 1.0148549239966087,
+      "mcell_updates_per_s": 26.153570695084586,
+      "speedup": 1.3140519511569966,
+      "parallel_efficiency": 0.32851298778924914,
+      "note": "8 samples, end-to-end HDF5 write"
+    }
+  ],
+  "interpretation": {
+    "best_core_mode": "numba",
+    "best_end_to_end_workers": 4,
+    "parallel_scaling_is_sublinear": true
+  }
+}

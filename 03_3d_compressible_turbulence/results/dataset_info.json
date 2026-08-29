@@ -1,0 +1,27 @@
+{
+  "path": "/home/ubuntu/data/pdebench-cfd3d-formal/artifacts/cfd3d_dataset.h5",
+  "shape_per_field": [
+    8,
+    11,
+    64,
+    64,
+    64
+  ],
+  "layout": "[sample, time, x, y, z]",
+  "fields": [
+    "density",
+    "velocity_x",
+    "velocity_y",
+    "velocity_z",
+    "pressure"
+  ],
+  "coordinate_lengths": {
+    "x": 64,
+    "y": 64,
+    "z": 64,
+    "t": 11
+  },
+  "upstream_t_coordinate_length": 12,
+  "upstream_coordinate_trimmed": true,
+  "size_bytes": 381315970
+}

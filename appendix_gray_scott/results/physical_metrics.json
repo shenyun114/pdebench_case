@@ -1,0 +1,48 @@
+{
+  "sample": "0000",
+  "shape": [
+    31,
+    128,
+    128,
+    2
+  ],
+  "time_range": [
+    0.0,
+    900.0
+  ],
+  "u_range": [
+    0.29190751910209656,
+    1.0
+  ],
+  "v_range": [
+    0.0,
+    0.44530636072158813
+  ],
+  "initial": {
+    "mean_u": 0.9745883941650391,
+    "mean_v": 0.016622737050056458,
+    "total_concentration": 0.9912111759185791,
+    "reaction_rate": 0.0013104784302413464,
+    "feed_supply": 0.0015246957773342729,
+    "v_removal": 0.002027973998337984,
+    "gradient_energy": 0.0011793680023401976,
+    "dvdt_reaction_rms": 0.0013990403385832906,
+    "interface_length": 0.6717529296875
+  },
+  "final": {
+    "mean_u": 0.9581863880157471,
+    "mean_v": 0.02070612832903862,
+    "total_concentration": 0.97889244556427,
+    "reaction_rate": 0.002543153241276741,
+    "feed_supply": 0.002508825622498989,
+    "v_removal": 0.002526147523894906,
+    "gradient_energy": 0.001566608319990337,
+    "dvdt_reaction_rms": 0.0013440747279673815,
+    "interface_length": 0.017822265625
+  },
+  "interpretation": {
+    "all_values_finite": true,
+    "v_pattern_survives": true,
+    "reaction_remains_active": true
+  }
+}

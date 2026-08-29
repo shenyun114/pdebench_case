@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "checks": {
+    "hdf5_exists": true,
+    "shape": true,
+    "five_fields": true,
+    "finite_positive_thermodynamics": true,
+    "time_coordinate": true,
+    "physical_metrics": true,
+    "mass_drift_below_2pct": true,
+    "energy_drift_below_5pct": true,
+    "nontrivial_vorticity": true,
+    "visualizations": true,
+    "benchmark_metrics": true,
+    "gpu_groups": true,
+    "sample_parallel_definition": true
+  }
+}

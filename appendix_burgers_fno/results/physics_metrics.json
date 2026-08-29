@@ -1,0 +1,11 @@
+{
+  "truth": {
+    "max_mass_drift": 5.960464477539062e-07,
+    "energy_change_fraction": -0.4139508605003357
+  },
+  "prediction": {
+    "mean_abs_mass_error_future": 0.020713264122605324,
+    "final_energy_relative_error": 0.04595981165766716,
+    "final_total_variation_relative_error": 0.11405105888843536
+  }
+}

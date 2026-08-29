@@ -1,0 +1,13 @@
+{
+  "platform": "Linux-5.13.0-30-generic-x86_64-with-glibc2.31",
+  "python": "3.10.20",
+  "torch": "1.13.1+cu117",
+  "torch_cuda_runtime": "11.7",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 3090",
+  "numpy": "1.26.4",
+  "h5py": "3.13.0",
+  "matplotlib": "3.10.9",
+  "jax": "0.4.38",
+  "pdebench_commit": "4ff3e3a4aa1561721b5571fa3a048a0a463e0568"
+}

@@ -1,0 +1,17 @@
+{
+  "checks": {
+    "sample_count_matches_config": true,
+    "sample_shape_matches_config": true,
+    "all_sample_shapes_match": true,
+    "seeds_are_reproducible": true,
+    "all_values_finite": true,
+    "backend_consistency_test_passes": true,
+    "physical_pattern_survives": true,
+    "numba_core_faster_than_python": true,
+    "benchmark_contains_requested_workers": true,
+    "all_visuals_exist": true,
+    "gif_has_material_size": true,
+    "parameter_sweep_complete": true
+  },
+  "passed": true
+}

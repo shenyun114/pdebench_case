@@ -1,0 +1,52 @@
+{
+  "implementation": {
+    "model": "pdebench.models.fno.fno.FNO1d",
+    "dataset": "pdebench.models.fno.utils.FNODatasetSingle",
+    "training": "autoregressive rolling-window rollout"
+  },
+  "runtime": {
+    "device": "cuda:0",
+    "torch": "1.13.1+cu117",
+    "cuda_available": true,
+    "seconds": 153.42324886843562
+  },
+  "configuration": {
+    "data": "/home/ubuntu/data/pdebench-fno-demo-verified/artifacts/raw/1D_Burgers_Sols_Nu0.01.hdf5",
+    "output": "/home/ubuntu/data/pdebench-fno-demo-verified/artifacts/results",
+    "epochs": 50,
+    "batch_size": 8,
+    "initial_step": 5,
+    "modes": 12,
+    "width": 20,
+    "learning_rate": 0.001,
+    "seed": 2026
+  },
+  "samples": {
+    "train": 87,
+    "validation": 9
+  },
+  "parameters": 23837,
+  "best_epoch": 38,
+  "best_validation_mse": 0.015568910166621208,
+  "convergence_ratio": 0.015958198568638587,
+  "official_pdebench_metrics": {
+    "rmse": 0.09440922737121582,
+    "normalized_rmse": 0.20044536888599396,
+    "conservation_error": 0.02501007914543152,
+    "max_error": 0.6877310276031494,
+    "boundary_rmse": 0.09110225737094879,
+    "fourier_rmse": [
+      0.029696954414248466,
+      0.013969010673463345,
+      0.0014234984992071986
+    ]
+  },
+  "rollout": {
+    "forecast_steps": 36,
+    "final_step_rmse": 0.08753565698862076,
+    "final_step_nrmse": 0.13465677201747894,
+    "max_abs_prediction": 3.1487607955932617,
+    "all_predictions_finite": true,
+    "mean_abs_mass_error": 0.020713264122605324
+  }
+}

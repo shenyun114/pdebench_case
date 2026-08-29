@@ -1,0 +1,31 @@
+{
+  "file": "/home/ubuntu/data/pdebench-fno-demo-verified/artifacts/raw/1D_Burgers_Sols_Nu0.01.hdf5",
+  "shape": [
+    96,
+    41,
+    128
+  ],
+  "dtype": "float32",
+  "viscosity": 0.01,
+  "x_range": [
+    0.00390625,
+    0.99609375
+  ],
+  "t_range": [
+    0.0,
+    1.0
+  ],
+  "max_abs_mass_drift": 2.384185791015625e-07,
+  "max_positive_energy_step": 0.0,
+  "checks": {
+    "required_keys": true,
+    "rank_is_batch_time_x": true,
+    "coordinate_lengths_match": true,
+    "all_values_finite": true,
+    "x_strictly_increasing": true,
+    "t_strictly_increasing": true,
+    "mass_conserved": true,
+    "viscous_energy_nonincreasing": true
+  },
+  "passed": true
+}

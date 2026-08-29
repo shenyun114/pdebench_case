@@ -1,0 +1,45 @@
+{
+  "data": {
+    "shape": [
+      101,
+      128,
+      128
+    ],
+    "dx": 0.0390625,
+    "dy": 0.0390625,
+    "time_range": [
+      0.0,
+      1.0
+    ],
+    "water_depth_range": [
+      0.2832145392894745,
+      2.0
+    ]
+  },
+  "conservation": {
+    "initial_mass": 25.799560546875,
+    "final_mass": 25.799560539599042,
+    "max_relative_mass_drift": 4.794317299179752e-10,
+    "initial_energy": 13.6993408203125,
+    "final_energy": 13.627098436518281,
+    "relative_energy_change": -0.005273420432543909,
+    "max_abs_x_momentum": 1.0408340855860843e-15,
+    "max_abs_y_momentum": 2.7807523674331875e-15
+  },
+  "flow": {
+    "max_speed": 0.5239293575286865,
+    "max_froude": 0.5275083780288696,
+    "max_kinetic_energy_density": 0.1543956995010376,
+    "initial_wavefront_radius": 0.5136324179292929,
+    "final_wavefront_radius": 1.741339172979798
+  },
+  "symmetry": {
+    "max_rotation_relative_l1": 0.00047990173334255815,
+    "final_rotation_relative_l1": 0.00047990173334255815
+  },
+  "interpretation": {
+    "mass_is_conserved": true,
+    "flow_remains_subcritical": true,
+    "numerical_energy_is_nonincreasing": true
+  }
+}

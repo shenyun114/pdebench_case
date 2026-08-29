@@ -1,0 +1,25 @@
+{
+  "platform": "Linux-5.13.0-30-generic-x86_64-with-glibc2.31",
+  "python": "3.10.21",
+  "backend": "numba",
+  "executor": "thread",
+  "workers": 4,
+  "samples": 8,
+  "configuration": {
+    "nx": 128,
+    "ny": 128,
+    "steps": 900,
+    "save_every": 30,
+    "dt": 1.0,
+    "du": 0.16,
+    "dv": 0.08,
+    "feed": 0.06,
+    "kill": 0.062,
+    "noise": 0.02
+  },
+  "wall_seconds_including_hdf5": 1.9415440119919367,
+  "mean_sample_seconds": 0.4133623266243376,
+  "aggregate_solver_mcell_updates_per_s": 35.67233647153519,
+  "end_to_end_mcell_updates_per_s": 60.7582415188072,
+  "output_bytes": 20719900
+}

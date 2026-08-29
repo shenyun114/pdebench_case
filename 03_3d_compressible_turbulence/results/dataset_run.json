@@ -1,0 +1,73 @@
+{
+  "gpu_count": 8,
+  "visible_devices": "0,1,2,3,4,5,6,7",
+  "elapsed_seconds": 61.86198163800873,
+  "shape": [
+    8,
+    11,
+    64,
+    64,
+    64
+  ],
+  "field_files": {
+    "D": "HD_Sols_3D_Turbs_Eta1e-08_Zeta1e-08_M1.0_key2022_D.npy",
+    "Vx": "HD_Sols_3D_Turbs_Eta1e-08_Zeta1e-08_M1.0_key2022_Vx.npy",
+    "Vy": "HD_Sols_3D_Turbs_Eta1e-08_Zeta1e-08_M1.0_key2022_Vy.npy",
+    "Vz": "HD_Sols_3D_Turbs_Eta1e-08_Zeta1e-08_M1.0_key2022_Vz.npy",
+    "P": "HD_Sols_3D_Turbs_Eta1e-08_Zeta1e-08_M1.0_key2022_P.npy"
+  },
+  "cell_snapshots": 23068672,
+  "throughput_mcell_snapshots_per_second": 0.37290548070361745,
+  "command": [
+    "/home/ubuntu/data/pdebench-case-envs/cfd3d/bin/python",
+    "/home/ubuntu/HW/Case/PDEBench-Cases/03_3d_compressible_turbulence/src/jax_loc_compat.py",
+    "/home/ubuntu/HW/Case/PDEBench/pdebench/data_gen/data_gen_NLE/CompressibleFluid/CFD_multi_Hydra.py",
+    "+args=3D_Multi_TurbM1.yaml",
+    "++args.save=/home/ubuntu/data/pdebench-cfd3d-formal/artifacts/raw_dataset/",
+    "++args.nx=64",
+    "++args.ny=64",
+    "++args.nz=64",
+    "++args.numbers=8",
+    "++args.init_key=2022",
+    "++args.M0=1.0",
+    "++args.k_tot=4",
+    "++args.gamma=1.6666666666666667",
+    "++args.eta=1e-08",
+    "++args.zeta=1e-08",
+    "++args.CFL=0.3",
+    "++args.fin_time=0.25",
+    "++args.dt_save=0.025",
+    "++args.show_steps=400",
+    "++args.if_show=0",
+    "++args.if_rand_param=false",
+    "++args.init_mode_Multi=3D_Turbs"
+  ],
+  "pdebench_commit": "4ff3e3a4aa1561721b5571fa3a048a0a463e0568",
+  "jax_version": "0.4.38",
+  "jax_backend": "gpu",
+  "available_gpu_count": 8,
+  "devices": [
+    "cuda:0",
+    "cuda:1",
+    "cuda:2",
+    "cuda:3",
+    "cuda:4",
+    "cuda:5",
+    "cuda:6",
+    "cuda:7"
+  ],
+  "simulation": {
+    "resolution": 64,
+    "samples": 8,
+    "seed": 2022,
+    "mach": 1.0,
+    "k_total": 4,
+    "gamma": 1.6666666666666667,
+    "eta": 1e-08,
+    "zeta": 1e-08,
+    "cfl": 0.3,
+    "final_time": 0.25,
+    "save_interval": 0.025,
+    "show_steps": 400
+  }
+}

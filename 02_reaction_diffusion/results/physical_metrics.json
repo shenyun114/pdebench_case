@@ -1,0 +1,52 @@
+{
+  "data": {
+    "shape": [
+      101,
+      128,
+      128
+    ],
+    "dx": 0.015625,
+    "dy": 0.015625,
+    "time_range": [
+      0.0,
+      5.0
+    ],
+    "u_range": [
+      -3.6610817909240723,
+      4.061606407165527
+    ],
+    "v_range": [
+      -4.233863353729248,
+      3.5758485794067383
+    ]
+  },
+  "coupling": {
+    "initial_correlation": 0.00042255228323662684,
+    "final_correlation": 0.9380237561003322,
+    "final_mean_u": -0.04610206559300423,
+    "final_mean_v": -0.040637001395225525,
+    "final_std_u": 0.32657352089881897,
+    "final_std_v": 0.18657205998897552
+  },
+  "pattern": {
+    "u_gradient_energy_initial": 4228.259765625,
+    "u_gradient_energy_final": 22.700199127197266,
+    "v_gradient_energy_initial": 4294.2265625,
+    "v_gradient_energy_final": 3.877084732055664,
+    "u_characteristic_length_initial": 0.04348054109294653,
+    "u_characteristic_length_final": 0.5837828681348801,
+    "v_characteristic_length_initial": 0.04408188017051923,
+    "v_characteristic_length_final": 0.8249405033272558
+  },
+  "mechanisms": {
+    "laplacian_definition": "exact PDEBench sparse five-point operator with homogeneous Neumann boundary",
+    "initial_rms_reaction_u": 3.2742254734039307,
+    "final_rms_reaction_u": 0.11600872874259949,
+    "initial_rms_diffusion_u": 18.197780714360277,
+    "final_rms_diffusion_u": 0.094529283106641,
+    "initial_rms_reaction_v": 1.4092192649841309,
+    "final_rms_reaction_v": 0.16487158834934235,
+    "initial_rms_diffusion_v": 90.5355727993022,
+    "final_rms_diffusion_v": 0.15112590888974103
+  }
+}

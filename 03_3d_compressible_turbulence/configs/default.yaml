@@ -1,0 +1,35 @@
+case:
+  name: pdebench_3d_compressible_turbulence
+  expected_commit: 4ff3e3a4aa1561721b5571fa3a048a0a463e0568
+
+simulation:
+  # This matches the official multi-GPU example resolution.
+  resolution: 64
+  samples: 8
+  seed: 2022
+  mach: 1.0
+  k_total: 4
+  gamma: 1.6666666666666667
+  eta: 1.0e-8
+  zeta: 1.0e-8
+  cfl: 0.3
+  final_time: 0.25
+  save_interval: 0.025
+  show_steps: 400
+
+benchmark:
+  enabled: true
+  gpu_counts: [1, 2, 4, 8]
+  repeats: 2
+  # Fixed total work; only the number of visible GPUs changes.
+  resolution: 48
+  samples: 8
+  final_time: 0.05
+  save_interval: 0.025
+
+postprocess:
+  sample_index: 0
+  gif_frames: 11
+  isosurface_face_limit: 30000
+  density_isosurface_percentile: 90
+  vorticity_isosurface_percentile: 97

@@ -1,0 +1,24 @@
+{
+  "platform": "Linux-5.13.0-30-generic-x86_64-with-glibc2.31",
+  "python": "3.10.20",
+  "torch": "1.13.1",
+  "shape": [
+    101,
+    128,
+    128
+  ],
+  "runtime_seconds": 1.20402280241251,
+  "numpy": "1.26.4",
+  "configuration": {
+    "nx": 128,
+    "ny": 128,
+    "frames": 101,
+    "final_time": 1.0,
+    "gravity": 1.0,
+    "dam_radius": 0.5,
+    "inner_height": 2.0
+  },
+  "config_file": "/home/ubuntu/data/pdebench-full-repro/swe/artifacts/resolved_config.yaml",
+  "pdebench_commit": "4ff3e3a4aa1561721b5571fa3a048a0a463e0568",
+  "solver": "pdebench.data_gen.src.sim_radial_dam_break.RadialDamBreak2D"
+}

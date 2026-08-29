@@ -1,0 +1,7 @@
+category,mode,grid,steps,samples,workers,repeats,seconds,mcell_updates_per_s,speedup,parallel_efficiency,note
+solver_core,python,48x48,120,1,1,3,2.8737763029930647,0.09620790585267319,1.0,,"shape=(4, 48, 48, 2)"
+solver_core,numpy,96x96,360,1,1,3,0.06590563600184396,50.34106642878271,523.2529071557996,,"shape=(7, 96, 96, 2)"
+solver_core,numba,96x96,360,1,1,3,0.054802818020107225,60.53995250358676,629.2617219659046,,"shape=(7, 96, 96, 2)"
+end_to_end,numba_thread_1,96x96,360,8,1,3,1.3335720930190291,19.90299597520242,1.0,1.0,"8 samples, end-to-end HDF5 write"
+end_to_end,numba_thread_2,96x96,360,8,2,3,1.234672827005852,21.497257750756507,1.080101597645923,0.5400507988229615,"8 samples, end-to-end HDF5 write"
+end_to_end,numba_thread_4,96x96,360,8,4,3,1.0148549239966087,26.153570695084586,1.3140519511569966,0.32851298778924914,"8 samples, end-to-end HDF5 write"

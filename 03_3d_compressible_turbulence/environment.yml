@@ -1,0 +1,22 @@
+name: pdebench-cfd3d
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=1.26.4
+  - scipy=1.15.2
+  - h5py=3.13
+  - matplotlib=3.10
+  - pandas
+  - pyyaml
+  - pillow
+  - imageio
+  - scikit-image
+  - hydra-core
+  - omegaconf
+  - pip:
+      # CUDA 12 wheels include CUDA user-space libraries. NVIDIA driver >= 525 is required.
+      # Pinning ml-dtypes prevents pip from pulling NumPy 2, unsupported by this PDEBench commit.
+      - ml-dtypes==0.5.3
+      - "jax[cuda12]==0.4.38"

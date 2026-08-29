@@ -1,0 +1,14 @@
+simulation:
+  nx: 128
+  ny: 128
+  frames: 101
+  final_time: 5.0
+  du: 0.001
+  dv: 0.005
+  reaction_k: 0.005
+  seed: 7
+
+resolution_study:
+  coarse_grids: [32, 64]
+  reference_grid: 128
+

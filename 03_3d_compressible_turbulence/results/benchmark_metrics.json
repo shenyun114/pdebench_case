@@ -1,0 +1,59 @@
+{
+  "definition": "fixed-total-sample strong scaling; warm-up excluded; includes process startup, initialization, solve, device-to-host transfer and NPY output",
+  "parallelism": "sample-level jax.pmap outside device-level jax.vmap; no spatial domain decomposition",
+  "pdebench_commit": "4ff3e3a4aa1561721b5571fa3a048a0a463e0568",
+  "jax_version": "0.4.38",
+  "available_gpu_count": 8,
+  "simulation": {
+    "resolution": 48,
+    "samples": 8,
+    "seed": 2022,
+    "mach": 1.0,
+    "k_total": 4,
+    "gamma": 1.6666666666666667,
+    "eta": 1e-08,
+    "zeta": 1e-08,
+    "cfl": 0.3,
+    "final_time": 0.05,
+    "save_interval": 0.025,
+    "show_steps": 400
+  },
+  "results": {
+    "1": {
+      "elapsed_seconds_median": 21.850207737501478,
+      "speedup": 1.0,
+      "parallel_efficiency": 1.0,
+      "repeats": [
+        22.010954347992083,
+        21.689461127010873
+      ]
+    },
+    "2": {
+      "elapsed_seconds_median": 17.233376461997977,
+      "speedup": 1.2679005640992214,
+      "parallel_efficiency": 0.6339502820496107,
+      "repeats": [
+        17.109165593981743,
+        17.357587330014212
+      ]
+    },
+    "4": {
+      "elapsed_seconds_median": 15.803739400013,
+      "speedup": 1.3825973198142905,
+      "parallel_efficiency": 0.3456493299535726,
+      "repeats": [
+        16.17767235901556,
+        15.429806441010442
+      ]
+    },
+    "8": {
+      "elapsed_seconds_median": 16.01311226550024,
+      "speedup": 1.364519737026829,
+      "parallel_efficiency": 0.17056496712835362,
+      "repeats": [
+        16.195782631984912,
+        15.830441899015568
+      ]
+    }
+  }
+}

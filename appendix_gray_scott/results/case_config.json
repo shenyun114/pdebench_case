@@ -1,0 +1,23 @@
+{
+  "case": "PDEBench Gray-Scott reaction diffusion",
+  "samples": 8,
+  "seed": 7,
+  "config": {
+    "nx": 128,
+    "ny": 128,
+    "steps": 900,
+    "save_every": 30,
+    "dt": 1.0,
+    "du": 0.16,
+    "dv": 0.08,
+    "feed": 0.06,
+    "kill": 0.062,
+    "noise": 0.02
+  },
+  "fields": [
+    "u",
+    "v"
+  ],
+  "boundary": "periodic",
+  "layout": "HDF5 samples/<id>/data with shape [time, y, x, field]"
+}

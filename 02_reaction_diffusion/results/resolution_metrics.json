@@ -1,0 +1,34 @@
+{
+  "study_type": "projected-initial-condition grid consistency; finest numerical solution is not an exact solution",
+  "operator": "PDEBench Simulator.rc_ode plus its exact five-point Neumann Laplacian",
+  "initial_condition_note": "The 128-grid seeded random field is block-averaged onto coarse grids so all runs represent the same resolved initial condition.",
+  "rows": [
+    {
+      "grid": 32,
+      "runtime_seconds": 0.03982340171933174,
+      "relative_l2_u": 0.3607641207231808,
+      "relative_l2_v": 0.2423941690096409,
+      "final_correlation_uv": 0.9283814232891722
+    },
+    {
+      "grid": 64,
+      "runtime_seconds": 0.4032243713736534,
+      "relative_l2_u": 0.1355293389887003,
+      "relative_l2_v": 0.0975910147493992,
+      "final_correlation_uv": 0.9357332383688944
+    },
+    {
+      "grid": 128,
+      "runtime_seconds": 10.293630242347717,
+      "relative_l2_u": 0.0,
+      "relative_l2_v": 0.0,
+      "final_correlation_uv": 0.9380237561003322
+    }
+  ],
+  "observed_l2_order_u": 1.4124506688422858,
+  "observed_l2_order_v": 1.3125347646121905,
+  "acceptance": {
+    "u_error_decreases": true,
+    "v_error_decreases": true
+  }
+}

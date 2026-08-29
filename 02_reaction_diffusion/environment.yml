@@ -1,0 +1,15 @@
+name: pdebench-reacdiff
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip>=24
+  - numpy=1.26
+  - scipy=1.15
+  - h5py=3.13
+  - matplotlib=3.10
+  - pillow>=11
+  - imageio>=2.36
+  - hydra-core=1.3
+  - python-dotenv
+  - pyyaml>=6
