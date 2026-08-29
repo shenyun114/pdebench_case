@@ -150,25 +150,7 @@ PDEBench 原保存接口主要面向水深数据，本案例从官方求解器�
 
 主要参数见[默认配置](01_radial_dam_break/configs/default.yaml)。
 
-### 2.3 算法设计与并行优化
-
-PDEBench 的 `RadialDamBreak2D` 使用 Clawpack/PyClaw 有限体积波传播算法。对单元 $(i,j)$ 积分守恒律后，以界面数值通量更新单元平均量：
-
-$$
-\mathbf{q}_{ij}^{n+1}=\mathbf{q}_{ij}^{n}
--\frac{\Delta t}{\Delta x}
-(\widehat{\mathbf{F}}_{i+1/2,j}-\widehat{\mathbf{F}}_{i-1/2,j})
--\frac{\Delta t}{\Delta y}
-(\widehat{\mathbf{G}}_{i,j+1/2}-\widehat{\mathbf{G}}_{i,j-1/2}).
-$$
-
-相邻单元共享同一界面通量，因而一个单元的流出量就是相邻单元的流入量。界面处使用 `shallow_roe_with_efix_2D`：Roe 线性化将状态跳跃分解为特征波，entropy fix 避免稀疏波被错误表示为非物理解，MC TVD 限制器抑制间断附近的振荡。时间推进按 CFL 条件自适应选取内部步长。
-
-该 $128^2$ 任务的单次求解约为秒级，官方入口为单进程 PyClaw。本案例不对小网格进行形式化 MPI 拆分，也不报告不适用的并行加速比。计算优化体现在调用已编译的 Roe 内核、一次求解保存全部场、向量化后处理以及用 32²/64²/128² 三网格量化精度—成本关系。大批量生成不同坝高或半径样本时，各样本互不依赖，可进一步在任务层并行。
-
-案例按前处理、算法运行和后处理三个阶段执行。以下命令应在同一个终端中依次运行，以便复用路径变量。
-
-**前处理：固定源码并准备配置。** 对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。该阶段把固定版本 PDEBench 放到数据盘，并生成本次实验独立使用的配置副本。
+以下前处理命令固定源码并准备配置。对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。该阶段把固定版本 PDEBench 放到数据盘，并生成本次实验独立使用的配置副本。前处理、算法运行和后处理命令应在同一个终端中依次执行，以便复用路径变量。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -185,7 +167,23 @@ mkdir -p "$ART/results"
 cp configs/default.yaml "$CONFIG"
 ```
 
-**算法运行：生成浅水波数值场。** [`src/simulate_shallow_water.py`](01_radial_dam_break/src/simulate_shallow_water.py) 调用官方 PyClaw 求解器，输出 `radial_dam_break.h5` 和 `simulation_info.json`。
+### 2.3 算法设计与并行优化
+
+PDEBench 的 `RadialDamBreak2D` 使用 Clawpack/PyClaw 有限体积波传播算法。对单元 $(i,j)$ 积分守恒律后，以界面数值通量更新单元平均量：
+
+$$
+\mathbf{q}_{ij}^{n+1}=\mathbf{q}_{ij}^{n}
+-\frac{\Delta t}{\Delta x}
+(\widehat{\mathbf{F}}_{i+1/2,j}-\widehat{\mathbf{F}}_{i-1/2,j})
+-\frac{\Delta t}{\Delta y}
+(\widehat{\mathbf{G}}_{i,j+1/2}-\widehat{\mathbf{G}}_{i,j-1/2}).
+$$
+
+相邻单元共享同一界面通量，因而一个单元的流出量就是相邻单元的流入量。界面处使用 `shallow_roe_with_efix_2D`：Roe 线性化将状态跳跃分解为特征波，entropy fix 避免稀疏波被错误表示为非物理解，MC TVD 限制器抑制间断附近的振荡。时间推进按 CFL 条件自适应选取内部步长。
+
+该 $128^2$ 任务的单次求解约为秒级，官方入口为单进程 PyClaw。本案例不对小网格进行形式化 MPI 拆分，也不报告不适用的并行加速比。计算优化体现在调用已编译的 Roe 内核、一次求解保存全部场、向量化后处理以及用 32²/64²/128² 三网格量化精度—成本关系。大批量生成不同坝高或半径样本时，各样本互不依赖，可进一步在任务层并行。
+
+算法运行调用 [`src/simulate_shallow_water.py`](01_radial_dam_break/src/simulate_shallow_water.py) 和官方 PyClaw 求解器，生成浅水波数值场，输出 `radial_dam_break.h5` 和 `simulation_info.json`。
 
 ```bash
 PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_shallow_water.py" \
@@ -194,7 +192,9 @@ PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_shallow_water.py" \
   --repo "$REPO"
 ```
 
-**后处理：物理诊断、可视化、网格研究和验收。** [`src/analyze_and_visualize.py`](01_radial_dam_break/src/analyze_and_visualize.py) 生成物理指标、PNG 和 GIF；[`src/resolution_study.py`](01_radial_dam_break/src/resolution_study.py) 完成三网格研究；[`src/verify_results.py`](01_radial_dam_break/src/verify_results.py) 检查字段、守恒量和图像是否齐全。
+### 2.4 后处理与结果分析
+
+后处理由 [`src/analyze_and_visualize.py`](01_radial_dam_break/src/analyze_and_visualize.py) 生成物理指标、PNG 和 GIF；[`src/resolution_study.py`](01_radial_dam_break/src/resolution_study.py) 完成三网格研究；[`src/verify_results.py`](01_radial_dam_break/src/verify_results.py) 检查字段、守恒量和图像是否齐全。已经完成算法运行后，执行：
 
 ```bash
 python "$CASE_DIR/src/analyze_and_visualize.py" \
@@ -207,14 +207,6 @@ PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
 python "$CASE_DIR/src/verify_results.py" \
   "$ART/radial_dam_break.h5" "$ART/results"
 ```
-
-| 阶段 | 对应代码 | 主要输出 |
-|---|---|---|
-| 前处理 | `scripts/setup_workspace.sh`、`configs/default.yaml` | 固定版本源码、`resolved_config.yaml` |
-| 算法运行 | `src/simulate_shallow_water.py` | `radial_dam_break.h5`、`simulation_info.json` |
-| 后处理 | `src/analyze_and_visualize.py`、`src/resolution_study.py`、`src/verify_results.py` | 物理指标、网格指标、PNG、GIF、PASS/FAIL |
-
-### 2.4 后处理与结果分析
 
 #### 2.4.1 水深和自由液面演化
 
@@ -286,6 +278,23 @@ $$
 
 两个场展平后拼接为 32,768 维状态向量，积分区间为 $t\in[0,5]$，输出 101 帧。HDF5 保存 $u,v,x,y,t$、扩散系数、反应参数、随机种子、边界和求解器信息。主要参数见[默认配置](02_reaction_diffusion/configs/default.yaml)。
 
+以下前处理命令固定源码、建立工作目录并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。三个阶段应在同一个终端中依次执行。
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
+cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
+export CASE_DIR="$PWD"
+export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
+export REPO="$WORK_ROOT/PDEBench"
+export ART="$WORK_ROOT/artifacts"
+export CONFIG="$ART/resolved_config.yaml"
+
+bash scripts/setup_workspace.sh "$WORK_ROOT"
+mkdir -p "$ART/results"
+cp configs/default.yaml "$CONFIG"
+```
+
 ### 3.3 算法设计与并行优化
 
 PDEBench 在规则网格上采用五点差分近似 Laplace 算子：
@@ -312,26 +321,7 @@ $$
 
 本案例保持官方单进程算法，使用稀疏矩阵—向量乘法和 NumPy 向量化避免 Python 网格循环。三网格结果用于说明自由度与显式扩散稳定性共同造成的成本增长。若需要生成大量随机样本，可按随机种子在进程或节点间进行样本级并行；这与把单个二维网格做空间域分解是不同的并行层次。
 
-案例同样分三个阶段执行，以下命令应在同一个终端中依次运行。
-
-**前处理：固定源码、建立工作目录并冻结配置。** 对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。
-
-```bash
-export PDEBENCH_CASE_DATA=/home/ubuntu/data
-conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
-cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
-export CASE_DIR="$PWD"
-export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
-export REPO="$WORK_ROOT/PDEBench"
-export ART="$WORK_ROOT/artifacts"
-export CONFIG="$ART/resolved_config.yaml"
-
-bash scripts/setup_workspace.sh "$WORK_ROOT"
-mkdir -p "$ART/results"
-cp configs/default.yaml "$CONFIG"
-```
-
-**算法运行：生成两个耦合场。** [`src/simulate_reaction_diffusion.py`](02_reaction_diffusion/src/simulate_reaction_diffusion.py) 调用 PDEBench 的反应–扩散离散与 RK45 时间积分，输出 `reaction_diffusion.h5` 和 `simulation_info.json`。
+算法运行调用 [`src/simulate_reaction_diffusion.py`](02_reaction_diffusion/src/simulate_reaction_diffusion.py)、PDEBench 的反应–扩散离散与 RK45 时间积分，生成两个耦合场，输出 `reaction_diffusion.h5` 和 `simulation_info.json`。
 
 ```bash
 PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_reaction_diffusion.py" \
@@ -340,7 +330,9 @@ PYTHONPATH="$REPO" python "$CASE_DIR/src/simulate_reaction_diffusion.py" \
   --repo "$REPO"
 ```
 
-**后处理：机制分解、频谱、网格研究和验收。** [`src/analyze_and_visualize.py`](02_reaction_diffusion/src/analyze_and_visualize.py) 生成相图、反应/扩散强度、频谱、PNG 和 GIF；[`src/pdebench_operators.py`](02_reaction_diffusion/src/pdebench_operators.py) 复现上游离散算子；[`src/resolution_study.py`](02_reaction_diffusion/src/resolution_study.py) 和 [`src/verify_results.py`](02_reaction_diffusion/src/verify_results.py) 分别完成网格一致性与自动验收。
+### 3.4 后处理与结果分析
+
+后处理由 [`src/analyze_and_visualize.py`](02_reaction_diffusion/src/analyze_and_visualize.py) 生成相图、反应/扩散强度、频谱、PNG 和 GIF；[`src/pdebench_operators.py`](02_reaction_diffusion/src/pdebench_operators.py) 复现上游离散算子；[`src/resolution_study.py`](02_reaction_diffusion/src/resolution_study.py) 和 [`src/verify_results.py`](02_reaction_diffusion/src/verify_results.py) 分别完成网格一致性与自动验收。已经完成算法运行后，执行：
 
 ```bash
 python "$CASE_DIR/src/analyze_and_visualize.py" \
@@ -353,14 +345,6 @@ PYTHONPATH="$REPO" python "$CASE_DIR/src/resolution_study.py" \
 python "$CASE_DIR/src/verify_results.py" \
   "$ART/reaction_diffusion.h5" "$ART/results"
 ```
-
-| 阶段 | 对应代码 | 主要输出 |
-|---|---|---|
-| 前处理 | `scripts/setup_workspace.sh`、`configs/default.yaml` | 固定版本源码、`resolved_config.yaml` |
-| 算法运行 | `src/simulate_reaction_diffusion.py` | `reaction_diffusion.h5`、`simulation_info.json` |
-| 后处理 | `src/analyze_and_visualize.py`、`src/pdebench_operators.py`、`src/resolution_study.py`、`src/verify_results.py` | 机制/网格指标、PNG、GIF、PASS/FAIL |
-
-### 3.4 后处理与结果分析
 
 #### 3.4.1 双场形成与耦合状态
 
@@ -454,15 +438,7 @@ $$
 
 $32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已经验收的 $64^3$、11 时刻结果，以便更清楚地呈现三维结构；若只有 CPU，也可以提高配置分辨率获得同类结果，但所需内存和运行时间会明显增加。[128³ 配置](03_3d_compressible_turbulence/configs/highres_128.yaml)作为高分辨率扩展保留，不纳入默认复现。
 
-### 4.3 算法设计与计算优化
-
-官方程序对无黏通量采用二阶 HLLC Riemann 求解器，以 MUSCL 和斜率限制器重构界面左右状态。HLLC 分辨左行波、接触波和右行波，MUSCL 在抑制激波附近数值振荡的同时减轻一阶迎风格式对涡结构的过度抹平。时间方向使用二阶预测—校正更新，黏性项采用中心差分，内部步长由三维 CFL 条件自适应确定。
-
-CPU 流程仍调用 PDEBench 的官方 JAX 求解器。JAX 首次运行会编译数组计算图，随后以已编译算子完成通量、重构和时间推进；三维网格运算由数组表达式完成，避免逐网格 Python 循环。默认只计算一个样本，从而能够在单个 CPU 设备上执行，也不会进入多设备性能测试。配置将性能测试设为关闭，但仍完整执行数据转换、守恒诊断、三维等值面、能谱、GIF 和自动验收。
-
-案例默认采用 CPU 后端，并按三个阶段执行。以下命令应在同一个终端中依次运行。
-
-**前处理：固定源码、检查 CPU 后端并冻结配置。** 对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。兼容层在运行时适配旧版 JAX 更新语法，不修改下载的 PDEBench 源码。
+以下前处理命令固定源码、检查 CPU 后端并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。兼容层在运行时适配旧版 JAX 更新语法，不修改下载的 PDEBench 源码。三个阶段应在同一个终端中依次执行。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -480,7 +456,13 @@ bash scripts/setup_workspace.sh "$WORK_ROOT" configs/cpu.yaml
 cp configs/cpu.yaml "$CONFIG"
 ```
 
-**算法运行：调用官方三维 CFD 求解器。** [`src/run_official.py`](03_3d_compressible_turbulence/src/run_official.py) 读取配置并调用固定版本 PDEBench，生成密度、三分量速度、压力和时间坐标等原始 NPY 文件。
+### 4.3 算法设计与计算优化
+
+官方程序对无黏通量采用二阶 HLLC Riemann 求解器，以 MUSCL 和斜率限制器重构界面左右状态。HLLC 分辨左行波、接触波和右行波，MUSCL 在抑制激波附近数值振荡的同时减轻一阶迎风格式对涡结构的过度抹平。时间方向使用二阶预测—校正更新，黏性项采用中心差分，内部步长由三维 CFL 条件自适应确定。
+
+CPU 流程仍调用 PDEBench 的官方 JAX 求解器。JAX 首次运行会编译数组计算图，随后以已编译算子完成通量、重构和时间推进；三维网格运算由数组表达式完成，避免逐网格 Python 循环。默认只计算一个样本，从而能够在单个 CPU 设备上执行，也不会进入多设备性能测试。配置将性能测试设为关闭，但仍完整执行数据转换、守恒诊断、三维等值面、能谱、GIF 和自动验收。
+
+算法运行调用 [`src/run_official.py`](03_3d_compressible_turbulence/src/run_official.py) 和固定版本 PDEBench 的三维 CFD 求解器，生成密度、三分量速度、压力和时间坐标等原始 NPY 文件。
 
 ```bash
 python "$CASE_DIR/src/run_official.py" \
@@ -489,7 +471,11 @@ python "$CASE_DIR/src/run_official.py" \
   --mode dataset
 ```
 
-**后处理：格式转换、三维诊断、可视化和验收。** [`src/convert_dataset.py`](03_3d_compressible_turbulence/src/convert_dataset.py) 把原始 NPY 合并为 HDF5；[`src/postprocess.py`](03_3d_compressible_turbulence/src/postprocess.py) 计算涡量、散度、守恒量和动能谱，并生成切片、等值面和 GIF；[`src/verify_results.py`](03_3d_compressible_turbulence/src/verify_results.py) 完成自动验收。
+CPU 复现生成的每个场形状为 `1×3×32×32×32`，在全新纯 CPU 环境中，首次 JAX 编译、求解和五场 NPY 写盘合计 42.592 s，合并 HDF5 为 1.45 MiB。该时间包含 JAX 编译、初值、计算和 I/O，不等同于纯数值算子时间；换用其他 CPU 后墙钟时间会随核心性能和系统负载变化。
+
+### 4.4 后处理与结果分析
+
+后处理由 [`src/convert_dataset.py`](03_3d_compressible_turbulence/src/convert_dataset.py) 把原始 NPY 合并为 HDF5；[`src/postprocess.py`](03_3d_compressible_turbulence/src/postprocess.py) 计算涡量、散度、守恒量和动能谱，并生成切片、等值面和 GIF；[`src/verify_results.py`](03_3d_compressible_turbulence/src/verify_results.py) 完成自动验收。已经完成算法运行后，执行：
 
 ```bash
 python "$CASE_DIR/src/convert_dataset.py" \
@@ -499,16 +485,6 @@ python "$CASE_DIR/src/postprocess.py" \
 python "$CASE_DIR/src/verify_results.py" \
   --config "$CONFIG" --work-dir "$ART"
 ```
-
-| 阶段 | 对应代码 | 主要输出 |
-|---|---|---|
-| 前处理 | `scripts/setup_workspace.sh`、`configs/cpu.yaml`、`src/jax_loc_compat.py` | 固定版本源码、CPU 后端检查、`resolved_config.yaml` |
-| 算法运行 | `src/run_official.py` | 五场原始 NPY、`dataset_run.json` |
-| 后处理 | `src/convert_dataset.py`、`src/common.py`、`src/postprocess.py`、`src/verify_results.py` | HDF5、物理指标、PNG、GIF、PASS/FAIL |
-
-CPU 复现生成的每个场形状为 `1×3×32×32×32`，在全新纯 CPU 环境中，首次 JAX 编译、求解和五场 NPY 写盘合计 42.592 s，合并 HDF5 为 1.45 MiB。该时间包含 JAX 编译、初值、计算和 I/O，不等同于纯数值算子时间；换用其他 CPU 后墙钟时间会随核心性能和系统负载变化。
-
-### 4.4 后处理与结果分析
 
 #### 4.4.1 三正交切片与三维等值面
 
