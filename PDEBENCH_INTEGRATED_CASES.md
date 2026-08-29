@@ -9,7 +9,7 @@
 PDEBench 将 PDE 数据生成、模型训练和评价组织为统一基准。其核心对象是由高保真求解器定义的前向传播算子
 
 $$
-\mathcal F_\theta:\;v_\theta(t,\mathbf{x})\longmapsto
+\mathcal F_\theta:\quad v_\theta(t,\mathbf{x})\longmapsto
 v_\theta(t+\Delta t,\mathbf{x}),
 $$
 
