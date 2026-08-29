@@ -18,7 +18,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 |---|---|---|---|---|
 | [案例一：二维径向溃坝浅水波](01_radial_dam_break/README.md) | 2D 双曲守恒律 | PyClaw Roe、守恒和三网格自收敛 | 水深、波前、速度、Froude 数、自由液面 GIF | 波动与守恒律 |
 | [案例二：二维耦合反应–扩散](02_reaction_diffusion/README.md) | 2D 抛物型双场 | 稀疏 Laplace、RK45、网格一致性 | 双场、反应/扩散平衡、相图、频谱、GIF | 扩散与斑图动力学 |
-| [案例三：三维可压缩湍流与多 GPU](03_3d_compressible_turbulence/README.md) | 3D 可压缩 Navier–Stokes | HLLC–MUSCL、JAX、1/2/4/8 GPU 样本并行 | 三正交切片、等值面、涡量、散度、能谱、GIF | 三维流动与 GPU 数据生成 |
+| [案例三：三维可压缩湍流](03_3d_compressible_turbulence/README.md) | 3D 可压缩 Navier–Stokes | HLLC–MUSCL、JAX CPU、质量和能量诊断 | 三正交切片、等值面、涡量、散度、能谱、GIF | 三维流动与五场数据生成 |
 | [附录 A：Gray–Scott 并行数据生成](appendix_gray_scott/README.md) | 2D 自包含扩展 | NumPy/Numba、线程池、参数扫描 | 斑图、时空图、参数相图 | 与案例二同属反应扩散，故降为扩展附录 |
 | [附录 B：Burgers/FNO 误差与失败模式](appendix_burgers_fno/README.md) | 1D PDE 学习 | PDEBench FNO1d、50 epoch | rollout、RMSE、守恒与频谱误差 | 模型误差反例 |
 
@@ -26,7 +26,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 
 1. 从二维浅水波理解守恒量、有限体积通量和波前传播；
 2. 用二维反应–扩散理解非守恒双场耦合和斑图尺度；
-3. 进入三维可压缩湍流，理解密度、压力、速度、涡量、散度、能谱以及多 GPU 粒度；
+3. 进入三维可压缩湍流，理解密度、压力、速度、涡量、散度和能谱；
 4. 若需要更多参数扫描与 CPU JIT 内容，再阅读 Gray–Scott 附录；
 5. 最后把 Burgers/FNO 当作“总体 RMSE 不足以代表物理正确”的误差案例。
 
@@ -39,7 +39,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 - YAML 参数配置、快速/正式运行入口和一键流水线；
 - 大体积 HDF5、日志、JSON/CSV 统一写入 `/home/ubuntu/data`；
 - 展示用 PNG/GIF、逐图物理解释和机器可读 PASS/FAIL；
-- 对“不适用的并行”“样本级并行”和“空间域分解”做明确区分。
+- 三个主案例均提供可在普通 CPU 环境执行的默认复现路径。
 
 [复现测试报告](REPRODUCIBILITY_REPORT.md)记录环境、运行路径、实测指标和源码完整性。[PDEBench 支持案例说明](PDEBENCH_SUPPORTED_CASES.md)列出固定提交还能生成的其他 PDE。
 

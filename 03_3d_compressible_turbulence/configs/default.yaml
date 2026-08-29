@@ -1,5 +1,6 @@
 case:
   name: pdebench_3d_compressible_turbulence
+  backend: gpu
   expected_commit: 4ff3e3a4aa1561721b5571fa3a048a0a463e0568
 
 simulation:

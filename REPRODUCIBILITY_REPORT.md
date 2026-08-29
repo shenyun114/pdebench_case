@@ -58,6 +58,17 @@
 
 ## 案例三：3D 可压缩湍流
 
+### CPU 默认流程
+
+- 后端：JAX 0.4.38 CPU，单个 `CpuDevice`；
+- 配置：`configs/cpu.yaml`，不需要 NVIDIA 驱动或 CUDA；
+- 输出形状：每场 `1×3×32×32×32`，共五个物理场；
+- 全新纯 CPU 环境中的首次 JAX 编译、求解和 NPY 写盘：`42.592 s`；
+- HDF5：`1.45 MiB`；
+- 质量漂移 `0`，总能量漂移 `8.788×10⁻⁷`；
+- 静态图、GIF 和自动验收全部 PASS；
+- 独立工作目录：`/home/ubuntu/data/pdebench-cfd3d-cpu-clean-env-test/artifacts`。
+
 ### 环境和官方代码兼容
 
 - 新环境：Python 3.10.21、JAX/JAXlib 0.4.38 CUDA 12、NumPy 1.26.4；

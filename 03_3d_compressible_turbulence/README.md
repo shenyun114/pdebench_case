@@ -4,6 +4,8 @@
 
 本案例已在 8 张 NVIDIA GeForce RTX 3090 上完整复现。正式任务生成 8 个样本、11 个时刻、$64^3$ 网格以及密度、三分量速度和压力共 5 个场；大体积结果写入 `/home/ubuntu/data`，案例目录只保存配置、代码、文档和压缩后的展示图。
 
+案例同时提供单 CPU 默认复现路径：`cpu.yaml` 使用一个 CPU 设备生成 `1×3×32³` 的五场数据，跳过多 GPU 基准，但保留数值生成、HDF5、全部物理后处理、PNG/GIF 和自动验收。多 GPU 内容作为独立案例中的性能扩展保留。
+
 # 1. 案例描述
 
 ## 1.1 控制方程和物理量
@@ -67,7 +69,32 @@ HLLC 能区分左行波、接触波和右行波；MUSCL 在保持激波附近稳
 
 # 2. 前处理
 
-## 2.1 在数据盘创建 CUDA JAX 环境
+## 2.1 创建 CPU 环境（默认复现）
+
+CPU 环境不需要 NVIDIA 驱动或 CUDA：
+
+```bash
+git clone https://github.com/shenyun114/pdebench_case.git
+cd pdebench_case/03_3d_compressible_turbulence
+export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
+  -f environment-cpu.yml
+conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
+```
+
+检查 CPU 后端、自动下载的 PDEBench 提交和工作树：
+
+```bash
+bash scripts/setup_workspace.sh \
+  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu-check" \
+  configs/cpu.yaml
+```
+
+成功输出应包含 `JAX 0.4.38 backend cpu`、一个 `CpuDevice` 和固定提交 `4ff3e3a4...`。
+
+## 2.2 创建 CUDA JAX 环境（性能扩展）
 
 环境约需数 GB，必须放到数据盘：
 
@@ -100,10 +127,11 @@ GPU devices 8 [...]
 PDEBench 4ff3e3a4aa1561721b5571fa3a048a0a463e0568（干净）
 ```
 
-## 2.2 三档配置
+## 2.3 配置分档
 
 | 配置 | 数据任务 | 性能任务 | 用途 |
 |---|---|---|---|
+| `cpu.yaml` | $1\times3\times32^3$ | 关闭 | 单 CPU 默认完整复现 |
 | `smoke.yaml` | $8\times3\times32^3$ | $24^3$，1/2/4/8 GPU，各 1 次 | 快速检查全部阶段 |
 | `default.yaml` | $8\times11\times64^3$ | $48^3$，每组预热 1 次、计量 2 次 | 正式文档结果 |
 | `highres_128.yaml` | $8\times21\times128^3$ | 默认关闭 | 高分辨率扩展 |
@@ -114,7 +142,7 @@ PDEBench 4ff3e3a4aa1561721b5571fa3a048a0a463e0568（干净）
 [sample, time, x, y, z]
 ```
 
-## 2.3 前处理和兼容层
+## 2.4 前处理和兼容层
 
 `run_official.py` 不复制求解器，而是进入上游 `CompressibleFluid` 目录，使用 Hydra 的 `++args.*` 覆盖分辨率、样本数、时间、随机种子和输出路径。实际命令完整记录在 `dataset_run.json` 和日志中。
 
@@ -157,7 +185,21 @@ pm_evolve = jax.pmap(jax.vmap(evolve, axis_name="j"), axis_name="i")
 
 这与 MPI 网格分区的强扩展不是一回事。文档和性能图均使用“sample-level strong scaling”，不把它描述成三维空间并行。
 
-## 3.2 一键快速测试
+## 3.2 一键 CPU 复现
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
+cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
+
+bash scripts/run_pipeline.sh \
+  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu" \
+  configs/cpu.yaml
+```
+
+本机在全新纯 CPU 环境中生成 `1×3×32×32×32` 的五个场，首次 JAX 编译、求解和 NPY 写盘为 `42.592 s`，HDF5 为 `1.45 MiB`；质量漂移为 `0`，总能量漂移为 `8.788×10⁻⁷`，全部物理图、GIF 和自动验收通过。墙钟时间会随 CPU 型号和共享负载变化。
+
+## 3.3 一键 GPU 快速测试
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -171,7 +213,7 @@ bash scripts/run_pipeline.sh \
 
 本机 smoke 复现得到 `8×3×32×32×32`，首次编译、计算和写盘为 `43.330 s`，最终自动验收 PASS。
 
-## 3.3 一键正式运行
+## 3.4 一键 GPU 正式运行
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
@@ -193,7 +235,7 @@ bash scripts/run_pipeline.sh \
 4. 计算涡量、速度散度、守恒量和三维能谱；
 5. 生成静态图、11 帧 GIF 和自动验收 JSON。
 
-## 3.4 正式数据生成结果
+## 3.5 GPU 正式数据生成结果
 
 | 项目 | 实测值 |
 |---|---:|
@@ -206,7 +248,7 @@ bash scripts/run_pipeline.sh \
 
 这里的 `61.862 s` 包含 Python 启动、JAX 编译、初值生成、时间推进、设备到主机传输和五个 NPY 文件写出，不能解释为纯算子时间。
 
-## 3.5 1/2/4/8 GPU 实测
+## 3.6 1/2/4/8 GPU 实测
 
 固定总工作量为 8 个样本、$48^3$、$t=0\to0.05$。每个 GPU 组先执行一次不计入统计的 warm-up，再对两次完整进程运行取中位数。计时仍包含启动、初值、求解、回传和 NPY 写出。
 

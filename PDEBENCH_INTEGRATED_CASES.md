@@ -27,7 +27,7 @@ PDEBench 数据通常按“样本—时间—空间—变量”组织，可记�
 |---|---|---|
 | 二维径向溃坝 | $h,u,v,hu,hv$ | 质量、机械能、整体动量、Froude 数、波前、旋转对称性、网格一致性 |
 | 二维反应–扩散 | $u,v$ | 反应/扩散强度、相关性、梯度能、相平面、空间频谱、网格一致性 |
-| 三维可压缩湍流 | $\rho,v_x,v_y,v_z,p$ | 质量、总能量、动能、平均压力、涡量、速度散度、动能谱、多 GPU 扩展 |
+| 三维可压缩湍流 | $\rho,v_x,v_y,v_z,p$ | 质量、总能量、动能、平均压力、涡量、速度散度和动能谱 |
 
 本文展示的是 PDEBench 的**数值求解与数据生成能力**。三个主案例均直接求解控制方程，不训练神经网络，因而不存在 epoch、训练损失或预测误差曲线；生成的时空场可继续作为 FNO、U-Net 或其他代理模型的训练与测试数据。
 
@@ -279,7 +279,7 @@ $u$ 的梯度能由 4228.26 降至 22.70，$v$ 由 4294.23 降至 3.88，定量�
 
 ---
 
-## 4. 案例三：三维可压缩湍流与多 GPU 数据生成
+## 4. 案例三：三维可压缩湍流数值模拟
 
 ### 4.1 案例描述
 
@@ -327,47 +327,28 @@ $$
 
 官方程序在 Fourier 空间进行 Helmholtz 分解，削弱速度场的可压缩分量，使初态以近似无散的旋转运动为主，再把速度归一化到指定马赫数。不同 `init_key` 改变模态相位，生成遵循相同统计设置但涡结构位置不同的独立样本。周期边界让穿过一侧的流体从对侧进入，域内没有质量通量损失，适合检查总质量和总能量。
 
-案例通过 Hydra 覆盖网格、样本数、终止时间、保存时刻、随机种子和输出路径。正式配置生成 8 个样本、11 个时刻、$64^3$ 网格及密度、三分量速度、压力共 5 个场；每个场统一为 `[sample,time,x,y,z]`。官方五个 NPY 场随后合并为带坐标、配置、源码提交和字段名的 HDF5。转换阶段还校验各场形状和时间坐标，防止上游多余尾部坐标造成场—时刻错位。
+案例通过 Hydra 覆盖网格、样本数、终止时间、保存时刻、随机种子和输出路径。总案例默认使用 [CPU 配置](03_3d_compressible_turbulence/configs/cpu.yaml)，生成 1 个样本、3 个时刻、$32^3$ 网格及密度、三分量速度、压力共 5 个场；每个场统一为 `[sample,time,x,y,z]`。官方五个 NPY 场随后合并为带坐标、配置、源码提交和字段名的 HDF5。转换阶段还校验各场形状和时间坐标，防止场—时刻错位。
 
-[快速配置](03_3d_compressible_turbulence/configs/smoke.yaml)采用 $32^3$ 验证流程，[正式配置](03_3d_compressible_turbulence/configs/default.yaml)采用 $64^3$ 并执行性能测试，[128³ 配置](03_3d_compressible_turbulence/configs/highres_128.yaml)提供高分辨率扩展入口。128³ 的内存、输出和运行成本显著更高，不属于默认一键测试。
+$32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已经验收的 $64^3$、11 时刻结果，以便更清楚地呈现三维结构；若只有 CPU，也可以提高配置分辨率获得同类结果，但所需内存和运行时间会明显增加。[128³ 配置](03_3d_compressible_turbulence/configs/highres_128.yaml)作为高分辨率扩展保留，不纳入默认复现。
 
-### 4.3 算法设计与并行优化
+### 4.3 算法设计与计算优化
 
 官方程序对无黏通量采用二阶 HLLC Riemann 求解器，以 MUSCL 和斜率限制器重构界面左右状态。HLLC 分辨左行波、接触波和右行波，MUSCL 在抑制激波附近数值振荡的同时减轻一阶迎风格式对涡结构的过度抹平。时间方向使用二阶预测—校正更新，黏性项采用中心差分，内部步长由三维 CFL 条件自适应确定。
 
-多样本入口的核心并行表达为
-
-```python
-pm_evolve = jax.pmap(jax.vmap(evolve, axis_name="j"), axis_name="i")
-```
-
-`vmap` 在单张 GPU 内批量推进若干独立样本，`pmap` 再将样本组分配到多张 GPU。每个 `evolve` 都持有完整的 $x\times y\times z$ 网格，因此这是**样本级数据并行**，不是把一个三维网格沿空间方向分块：GPU 之间没有单样本 halo 交换，增加 GPU 只减少每卡样本数，不能缩短单样本的临界计算路径。
-
-固定总工作量为 8 个样本、$48^3$ 和相同时间区间时，每组设备先预热一次，再对两次独立进程计时取中位数：
-
-| GPU 数 | 每卡样本 | 中位时间/s | 加速比 | 并行效率 |
-|---:|---:|---:|---:|---:|
-| 1 | 8 | 21.850 | 1.000 | 1.000 |
-| 2 | 4 | 17.233 | 1.268 | 0.634 |
-| 4 | 2 | 15.804 | 1.383 | 0.346 |
-| 8 | 1 | 16.013 | 1.365 | 0.171 |
-
-4 GPU 是该固定任务的最短时间点。8 GPU 虽然全部参与计算，但每卡只剩一个 $48^3$ 样本，设备调度、JAX 进程启动、主机回传和串行 NPY 写盘的占比增大，因此较 4 GPU 轻微退化。该结果表明样本并行已经生效，同时也准确给出了当前粒度下的饱和点；它不能被解释为空间域分解的理想强扩展。
-
-![1/2/4/8 GPU 扩展结果](03_3d_compressible_turbulence/results/multi_gpu_scaling.png)
+CPU 流程仍调用 PDEBench 的官方 JAX 求解器。JAX 首次运行会编译数组计算图，随后以已编译算子完成通量、重构和时间推进；三维网格运算由数组表达式完成，避免逐网格 Python 循环。默认只计算一个样本，从而能够在单个 CPU 设备上执行，也不会进入多设备性能测试。配置将性能测试设为关闭，但仍完整执行数据转换、守恒诊断、三维等值面、能谱、GIF 和自动验收。
 
 完整正式流程执行命令为：
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
-conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
+conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 bash scripts/run_pipeline.sh \
-  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-formal-new" \
-  configs/default.yaml
+  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu" \
+  configs/cpu.yaml
 ```
 
-正式生成的每个场形状为 `8×11×64×64×64`，官方求解、设备回传和五场 NPY 写盘合计 61.862 s，合并 HDF5 为 363.65 MiB。该时间包含 JAX 编译、初值、计算、回传与 I/O，不等同于纯数值算子时间。
+CPU 复现生成的每个场形状为 `1×3×32×32×32`，在全新纯 CPU 环境中，首次 JAX 编译、求解和五场 NPY 写盘合计 42.592 s，合并 HDF5 为 1.45 MiB。该时间包含 JAX 编译、初值、计算和 I/O，不等同于纯数值算子时间；换用其他 CPU 后墙钟时间会随核心性能和系统负载变化。
 
 ### 4.4 后处理与结果分析
 
@@ -441,28 +422,28 @@ cd ..
 ```bash
 mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
-  --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d" \
-  -f 03_3d_compressible_turbulence/environment.yml
+  --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
+  -f 03_3d_compressible_turbulence/environment-cpu.yml
 ```
 
-三维环境采用 `jax[cuda12]==0.4.38`。固定 PDEBench 提交中的公共边界函数使用历史 `.loc` 更新接口，案例通过运行时兼容层将其等价映射到现代 JAX 的 `.at`；该处理不改变索引和数值公式，也不修改脚本自动下载的 PDEBench 上游文件。
+CPU 环境采用 `jax==0.4.38`，不需要 NVIDIA 驱动或 CUDA。固定 PDEBench 提交中的公共边界函数使用历史 `.loc` 更新接口，案例通过运行时兼容层将其等价映射到现代 JAX 的 `.at`；该处理不改变索引和数值公式，也不修改脚本自动下载的 PDEBench 上游文件。
 
 ### 5.3 快速验证和验收依据
 
-三维案例可先执行完整但低分辨率的 smoke 流程：
+三维案例的 CPU 默认流程为：
 
 ```bash
-conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
+conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd 03_3d_compressible_turbulence
 bash scripts/run_pipeline.sh \
-  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-smoke-new" \
-  configs/smoke.yaml
+  "$PDEBENCH_CASE_DATA/pdebench-cfd3d-cpu" \
+  configs/cpu.yaml
 ```
 
-三个案例的流水线均依次完成数值生成、HDF5 写出、物理诊断、PNG/GIF、网格或并行测试和自动验收。验收不仅检查文件存在，还检查字段形状、有限值、正水深或正密度/压力、守恒漂移、网格误差趋势、非零涡量及 1/2/4/8 GPU 记录。当前交付版本已经在数据盘独立工作目录完成复现，三个主案例均输出 PASS；详细环境、路径和原始数值记录见[复现测试报告](REPRODUCIBILITY_REPORT.md)。
+三个案例的流水线均依次完成数值生成、HDF5 写出、物理诊断、PNG/GIF 和自动验收。验收不仅检查文件存在，还检查字段形状、有限值、正水深或正密度/压力、守恒漂移、网格误差趋势和非零涡量。当前交付版本已经在数据盘独立工作目录完成复现，三个主案例均输出 PASS；详细环境、路径和原始数值记录见[复现测试报告](REPRODUCIBILITY_REPORT.md)。
 
 ## 6. 总结
 
-三个案例构成了从二维双曲守恒律、二维耦合抛物型方程到三维可压缩流的递进计算链。浅水波案例以波前、守恒和 Froude 数说明有限体积法如何处理间断；反应–扩散案例以双场耦合、机制分解和频谱说明非守恒斑图的形成；三维可压缩湍流案例则同时展示五场数据、旋转/压缩诊断、跨尺度能量分布以及真实的多 GPU 样本并行饱和点。
+三个案例构成了从二维双曲守恒律、二维耦合抛物型方程到三维可压缩流的递进计算链。浅水波案例以波前、守恒和 Froude 数说明有限体积法如何处理间断；反应–扩散案例以双场耦合、机制分解和频谱说明非守恒斑图的形成；三维可压缩湍流案例则展示五个耦合场、旋转/压缩诊断和跨尺度能量分布，并可在单个 CPU 设备上完成默认复现。
 
 这些结果既可作为独立的数值模拟示范，也可作为 PDEBench 代理模型实验的真值数据。后续若引入 FNO 或 U-Net，应在常规场误差之外继续保留本文的方程相关诊断：浅水波关注质量和波前，反应–扩散关注相图与频谱，三维流动关注质量/能量、涡量、散度和动能谱。这样才能判断模型不仅“图像相似”，而且保留了关键物理结构。

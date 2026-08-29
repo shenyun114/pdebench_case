@@ -69,7 +69,10 @@ def main() -> None:
     if not passed:
         failed = [key for key, value in checks.items() if not value]
         raise SystemExit("verification failed: " + ", ".join(failed))
-    print("PASS: official 3D CFD generation, multi-GPU benchmark and physical postprocessing are valid")
+    if cfg["benchmark"]["enabled"]:
+        print("PASS: official 3D CFD generation, multi-GPU benchmark and physical postprocessing are valid")
+    else:
+        print("PASS: official 3D CFD generation and physical postprocessing are valid")
 
 
 if __name__ == "__main__":

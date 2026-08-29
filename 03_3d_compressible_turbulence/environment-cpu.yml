@@ -1,0 +1,20 @@
+name: pdebench-cfd3d-cpu
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy=1.26.4
+  - scipy=1.15.2
+  - h5py=3.13
+  - matplotlib=3.10
+  - pandas
+  - pyyaml
+  - pillow
+  - imageio
+  - scikit-image
+  - hydra-core
+  - omegaconf
+  - pip:
+      - ml-dtypes==0.5.3
+      - jax==0.4.38
