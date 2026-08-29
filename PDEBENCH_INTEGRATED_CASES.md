@@ -90,6 +90,8 @@ cd pdebench_case
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 ```
 
+统一的源码位置、环境管理和重复运行注意事项见[环境与复现补充说明](ENVIRONMENT_AND_REPRODUCTION.md)。
+
 ---
 
 ## 2. 案例一：二维径向溃坝浅水波
@@ -149,6 +151,16 @@ $$
 PDEBench 原保存接口主要面向水深数据，本案例从官方求解器状态中同时提取 $h,u,v,hu,hv$，并写入带 $x,y,t$ 坐标和参数元数据的 HDF5。这样既保留训练数据常用的水深场，也能在后处理中计算动量、机械能、速度与 Froude 数。前处理同时检查网格、时刻、水深正性和官方固定内水深设置，避免配置与实际初值不一致。
 
 主要参数见[默认配置](01_radial_dam_break/configs/default.yaml)。
+
+首次运行先在数据盘创建浅水波环境：
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" \
+  -f 01_radial_dam_break/environment.yml
+```
 
 以下前处理命令固定源码并准备配置。对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。该阶段把固定版本 PDEBench 放到数据盘，并生成本次实验独立使用的配置副本。前处理、算法运行和后处理命令应在同一个终端中依次执行，以便复用路径变量。
 
@@ -277,6 +289,16 @@ $$
 随机种子 7 生成相互独立的标准正态初始场 $u_0,v_0$。白噪声初值包含从低频到网格截止频率的宽谱扰动，适合观察系统对空间尺度的筛选。为保证网格研究比较的是同一个物理初值，案例先生成 128² 初场，再通过守恒块平均投影到 64² 和 32²；不能仅在不同数组尺寸上重复使用同一随机种子，因为那会得到不同的离散随机场。
 
 两个场展平后拼接为 32,768 维状态向量，积分区间为 $t\in[0,5]$，输出 101 帧。HDF5 保存 $u,v,x,y,t$、扩散系数、反应参数、随机种子、边界和求解器信息。主要参数见[默认配置](02_reaction_diffusion/configs/default.yaml)。
+
+首次运行先在数据盘创建反应–扩散环境：
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff" \
+  -f 02_reaction_diffusion/environment.yml
+```
 
 以下前处理命令固定源码、建立工作目录并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。三个阶段应在同一个终端中依次执行。
 
@@ -438,6 +460,18 @@ $$
 
 $32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已经验收的 $64^3$、11 时刻结果，以便更清楚地呈现三维结构；若只有 CPU，也可以提高配置分辨率获得同类结果，但所需内存和运行时间会明显增加。[128³ 配置](03_3d_compressible_turbulence/configs/highres_128.yaml)作为高分辨率扩展保留，不纳入默认复现。
 
+首次运行先在数据盘创建三维 CFD 的 CPU 环境：
+
+```bash
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
+  -f 03_3d_compressible_turbulence/environment-cpu.yml
+```
+
+该环境采用 `jax==0.4.38`，不需要 NVIDIA 驱动或 CUDA。
+
 以下前处理命令固定源码、检查 CPU 后端并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。兼容层在运行时适配旧版 JAX 更新语法，不修改下载的 PDEBench 源码。三个阶段应在同一个终端中依次执行。
 
 ```bash
@@ -513,63 +547,3 @@ RMS 涡量表示旋转活动，RMS 散度表示压缩与膨胀强度。初态虽
 动画从中心 $x$ 平面同步显示密度、涡量模和速度散度。密度面板呈现压缩结构的移动、合并与变形；涡量面板显示旋转结构的增强、拉伸和衰减；散度面板中负值为压缩、正值为膨胀。三个面板在全部 11 帧内使用各自固定色标，因而不同时刻的亮暗可直接比较，避免逐帧自动缩放制造虚假的强度变化。
 
 ![密度、涡量和速度散度演化](03_3d_compressible_turbulence/results/turbulence_evolution.gif)
-
----
-
-## 5. 运行环境与完整复现
-
-### 5.1 源码和数据位置
-
-案例代码通过 GitHub 克隆到任意具有读写权限的位置即可运行，不需要把代码仓库复制到数据盘。建议用 `PDEBENCH_CASE_DATA` 指定容量充足的数据盘；Conda 环境、脚本自动克隆的固定版本 PDEBench、HDF5、原始 NPY、日志和临时缓存均写入该位置。案例脚本在目标数据目录已存在 HDF5 时主动退出，重跑应使用新的工作目录，避免覆盖原结果。
-
-```bash
-git clone https://github.com/shenyun114/pdebench_case.git
-cd pdebench_case
-export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
-```
-
-### 5.2 创建环境
-
-二维浅水波：
-
-```bash
-cd 01_radial_dam_break
-mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
-conda env create \
-  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" \
-  -f environment.yml
-cd ..
-```
-
-二维反应–扩散：
-
-```bash
-cd 02_reaction_diffusion
-conda env create \
-  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff" \
-  -f environment.yml
-cd ..
-```
-
-三维可压缩湍流：
-
-```bash
-mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
-conda env create \
-  --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
-  -f 03_3d_compressible_turbulence/environment-cpu.yml
-```
-
-CPU 环境采用 `jax==0.4.38`，不需要 NVIDIA 驱动或 CUDA。固定 PDEBench 提交中的公共边界函数使用历史 `.loc` 更新接口，案例通过运行时兼容层将其等价映射到现代 JAX 的 `.at`；该处理不改变索引和数值公式，也不修改脚本自动下载的 PDEBench 上游文件。
-
-### 5.3 分阶段复现和验收依据
-
-三个案例均按各案例正文给出的“前处理—算法运行—后处理”命令执行。前处理只需对一个新的 `WORK_ROOT` 执行一次；修改参数时应复制配置文件，算法与后处理阶段始终读取同一份 `resolved_config.yaml`。如果只需要重新出图，可以保留 HDF5 并单独重跑后处理命令，无需再次进行数值求解。
-
-后处理验收不仅检查文件存在，还检查字段形状、有限值、正水深或正密度/压力、守恒漂移、网格误差趋势和非零涡量。当前交付版本已经在数据盘独立工作目录完成三阶段复现，三个主案例均输出 PASS；详细环境、路径和原始数值记录见[复现测试报告](REPRODUCIBILITY_REPORT.md)。
-
-## 6. 总结
-
-三个案例构成了从二维双曲守恒律、二维耦合抛物型方程到三维可压缩流的递进计算链。浅水波案例以波前、守恒和 Froude 数说明有限体积法如何处理间断；反应–扩散案例以双场耦合、机制分解和频谱说明非守恒斑图的形成；三维可压缩湍流案例则展示五个耦合场、旋转/压缩诊断和跨尺度能量分布，并可在单个 CPU 设备上完成默认复现。
-
-这些结果既可作为独立的数值模拟示范，也可作为 PDEBench 代理模型实验的真值数据。后续若引入 FNO 或 U-Net，应在常规场误差之外继续保留本文的方程相关诊断：浅水波关注质量和波前，反应–扩散关注相图与频谱，三维流动关注质量/能量、涡量、散度和动能谱。这样才能判断模型不仅“图像相似”，而且保留了关键物理结构。

@@ -41,7 +41,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 - 展示用 PNG/GIF、逐图物理解释和机器可读 PASS/FAIL；
 - 三个主案例均提供可在普通 CPU 环境执行的默认复现路径。
 
-[复现测试报告](REPRODUCIBILITY_REPORT.md)记录环境、运行路径、实测指标和源码完整性。[PDEBench 支持案例说明](PDEBENCH_SUPPORTED_CASES.md)列出固定提交还能生成的其他 PDE。
+[环境与复现补充说明](ENVIRONMENT_AND_REPRODUCTION.md)集中说明源码、数据盘环境和重复运行规则。[复现测试报告](REPRODUCIBILITY_REPORT.md)记录环境、运行路径、实测指标和源码完整性。[PDEBench 支持案例说明](PDEBENCH_SUPPORTED_CASES.md)列出固定提交还能生成的其他 PDE。
 
 ## 一眼看结果
 
