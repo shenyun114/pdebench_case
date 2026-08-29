@@ -15,7 +15,7 @@
 本案例的守恒变量为
 
 $$
-\mathbf q=\begin{bmatrix}h&hu&hv\end{bmatrix}^{\mathrm T},
+\mathbf{q}=\begin{bmatrix}h&hu&hv\end{bmatrix}^{\mathrm T},
 $$
 
 其中 $h$ 是水深，$u,v$ 是 $x,y$ 方向的深度平均速度，$hu,hv$ 是单位宽度动量。平坦底床、无摩擦时的二维方程为
@@ -45,13 +45,12 @@ $$
 计算域为 $[-2.5,2.5]^2$。初始时刻，半径 $R_0=0.5$ 的圆形区域水深为 2，外部水深为 1，速度处处为零：
 
 $$
-h(x,y,0)=
-\begin{cases}
-2,&\sqrt{x^2+y^2}\le0.5,\\
-1,&\sqrt{x^2+y^2}>0.5,
-\end{cases}
-\qquad u=v=0.
+h(x,y,0)=2\quad\text{当 }r\le0.5,
+\qquad
+h(x,y,0)=1\quad\text{当 }r>0.5,
 $$
+
+其中 $r=\sqrt{x^2+y^2}$，并且 $u(x,y,0)=v(x,y,0)=0$。
 
 去掉理想圆形挡水墙后，水深间断分裂为两类波：向外传播的环形涌浪（bore）把动量传向低水位区；向内传播的稀疏波（rarefaction）使中心水位下降。这个问题同时含有间断、波传播、守恒和旋转对称性，是检验双曲守恒律求解器的经典算例。
 
@@ -72,9 +71,9 @@ $Fr<1$ 表示亚临界流，重力波可以向上下游两个方向传播；$Fr>
 PDEBench 的 `RadialDamBreak2D` 使用 Clawpack/PyClaw。有限体积法不直接逼近某个点的导数，而是对每个网格单元积分守恒律，通过单元边界数值通量更新单元平均值：
 
 $$
-\mathbf q_{ij}^{n+1}=\mathbf q_{ij}^{n}
--\frac{\Delta t}{\Delta x}(\hat{\mathbf F}_{i+1/2,j}-\hat{\mathbf F}_{i-1/2,j})
--\frac{\Delta t}{\Delta y}(\hat{\mathbf G}_{i,j+1/2}-\hat{\mathbf G}_{i,j-1/2}).
+\mathbf{q}_{ij}^{n+1}=\mathbf{q}_{ij}^{n}
+-\frac{\Delta t}{\Delta x}(\hat{\mathbf{F}}_{i+1/2,j}-\hat{\mathbf{F}}_{i-1/2,j})
+-\frac{\Delta t}{\Delta y}(\hat{\mathbf{G}}_{i,j+1/2}-\hat{\mathbf{G}}_{i,j-1/2}).
 $$
 
 相邻单元共享同一通量，一个单元流出的质量正是另一个单元流入的质量，因此天然适合守恒律。
@@ -253,7 +252,7 @@ python src/verify_results.py "$ART/radial_dam_break.h5" "$ART/results"
 在看图之前，需要区分四类量：
 
 - 水深 $h$ 是标量，颜色越深表示单位水平面积上的水柱越高；它不是地形高度；
-- 速度大小 $|\mathbf u|=\sqrt{u^2+v^2}$ 也是标量，箭头只表示速度方向和相对大小；为避免遮挡，箭头每隔 8 个网格抽样一次；
+- 速度大小 $|\mathbf{u}|=\sqrt{u^2+v^2}$ 也是标量，箭头只表示速度方向和相对大小；为避免遮挡，箭头每隔 8 个网格抽样一次；
 - Froude 数把速度除以局部重力波速，所以相同流速在浅水区会得到更大的 $Fr$；
 - 径向剖面是对同一半径圆环上的值做方位平均，能滤除笛卡尔网格造成的轻微锯齿，但也会隐藏非轴对称误差。
 

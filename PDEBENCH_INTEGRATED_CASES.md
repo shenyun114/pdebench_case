@@ -9,8 +9,8 @@
 PDEBench 将 PDE 数据生成、模型训练和评价组织为统一基准。其核心对象是由高保真求解器定义的前向传播算子
 
 $$
-\mathcal F_\theta:\;v_\theta(t,\mathbf x)\longmapsto
-v_\theta(t+\Delta t,\mathbf x),
+\mathcal F_\theta:\;v_\theta(t,\mathbf{x})\longmapsto
+v_\theta(t+\Delta t,\mathbf{x}),
 $$
 
 其中 $v$ 表示状态场，$\theta$ 表示黏性、扩散系数、初边值等物理参数。FNO、U-Net 等数据驱动模型学习近似算子 $\widehat{\mathcal F}_{\theta,\phi}$；逆问题则根据观测到的状态反推未知初值或方程参数。PDEBench 同时提供数值数据生成程序、标准 HDF5 数据、FNO/U-Net/PINN 等基线和统一指标，使不同模型能够在相同数据与评价规则下比较。
@@ -54,7 +54,7 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 守恒变量为
 
 $$
-\mathbf q=(h,hu,hv)^{\mathrm T},
+\mathbf{q}=(h,hu,hv)^{\mathrm T},
 $$
 
 其中 $h$ 为水深，$u,v$ 为两个水平方向的深度平均速度，$hu,hv$ 为单位宽度动量。无底床起伏和摩擦时，二维控制方程为
@@ -90,13 +90,12 @@ $$
 计算域为 $[-2.5,2.5]^2$，采用 $128\times128$ 均匀笛卡尔网格，$\Delta x=\Delta y=0.0390625$。网格存储单元平均守恒量，而不是节点上的点值。初始水深为
 
 $$
-h(x,y,0)=
-\begin{cases}
-2,&\sqrt{x^2+y^2}\le0.5,\\
-1,&\sqrt{x^2+y^2}>0.5,
-\end{cases}
-\qquad u(x,y,0)=v(x,y,0)=0.
+h(x,y,0)=2\quad\text{当 }r\le0.5,
+\qquad
+h(x,y,0)=1\quad\text{当 }r>0.5,
 $$
+
+其中 $r=\sqrt{x^2+y^2}$，并且 $u(x,y,0)=v(x,y,0)=0$。
 
 圆形间断投影到笛卡尔单元后形成离散初值。四周采用外推边界；在 $t\le1$ 的计算区间内，主波尚未到达外边界，中心波系因而基本不受边界反射影响。配置文件规定 $g=1$、101 个等间隔输出时刻和 $t\in[0,1]$。输出间隔为 0.01，但求解器内部步长由 CFL 稳定性条件决定，二者不能混同。
 
@@ -109,11 +108,11 @@ PDEBench 原保存接口主要面向水深数据，本案例从官方求解器�
 PDEBench 的 `RadialDamBreak2D` 使用 Clawpack/PyClaw 有限体积波传播算法。对单元 $(i,j)$ 积分守恒律后，以界面数值通量更新单元平均量：
 
 $$
-\mathbf q_{ij}^{n+1}=\mathbf q_{ij}^{n}
+\mathbf{q}_{ij}^{n+1}=\mathbf{q}_{ij}^{n}
 -\frac{\Delta t}{\Delta x}
-(\widehat{\mathbf F}_{i+1/2,j}-\widehat{\mathbf F}_{i-1/2,j})
+(\widehat{\mathbf{F}}_{i+1/2,j}-\widehat{\mathbf{F}}_{i-1/2,j})
 -\frac{\Delta t}{\Delta y}
-(\widehat{\mathbf G}_{i,j+1/2}-\widehat{\mathbf G}_{i,j-1/2}).
+(\widehat{\mathbf{G}}_{i,j+1/2}-\widehat{\mathbf{G}}_{i,j-1/2}).
 $$
 
 相邻单元共享同一界面通量，因而一个单元的流出量就是相邻单元的流入量。界面处使用 `shallow_roe_with_efix_2D`：Roe 线性化将状态跳跃分解为特征波，entropy fix 避免稀疏波被错误表示为非物理解，MC TVD 限制器抑制间断附近的振荡。时间推进按 CFL 条件自适应选取内部步长。
@@ -212,16 +211,16 @@ $$
 +\frac{u_{i,j+1}-2u_{ij}+u_{i,j-1}}{\Delta y^2}.
 $$
 
-空间离散后得到常微分方程
+空间离散后，两个场分别满足以下常微分方程：
 
 $$
-\frac{d}{dt}
-\begin{bmatrix}\mathbf u\\\mathbf v\end{bmatrix}
-=
-\begin{bmatrix}
-D_uL\mathbf u+\mathbf u-\mathbf u^3-k-\mathbf v\\
-D_vL\mathbf v+\mathbf u-\mathbf v
-\end{bmatrix},
+\frac{d\mathbf{u}}{dt}
+=D_uL\mathbf{u}+\mathbf{u}-\mathbf{u}^{3}-k-\mathbf{v},
+$$
+
+$$
+\frac{d\mathbf{v}}{dt}
+=D_vL\mathbf{v}+\mathbf{u}-\mathbf{v},
 $$
 
 其中 $L$ 是稀疏 Laplace 矩阵。官方实现将该系统交给 SciPy `solve_ivp` 的 RK45 自适应显式积分器。0.05 是保存帧的间隔，内部步长由局部截断误差控制；随着网格加密，扩散算子的最大特征值增大，显式积分需要更小内部步长。
@@ -289,41 +288,41 @@ $u$ 的梯度能由 4228.26 降至 22.70，$v$ 由 4294.23 降至 3.88，定量�
 质量、动量和总能量方程为
 
 $$
-\frac{\partial\rho}{\partial t}+\nabla\cdot(\rho\mathbf v)=0,
+\frac{\partial\rho}{\partial t}+\nabla\cdot(\rho\mathbf{v})=0,
 $$
 
 $$
-\rho\left(\frac{\partial\mathbf v}{\partial t}
-+\mathbf v\cdot\nabla\mathbf v\right)
-=-\nabla p+\eta\nabla^2\mathbf v
-+\left(\zeta+\frac{\eta}{3}\right)\nabla(\nabla\cdot\mathbf v),
+\rho\left(\frac{\partial\mathbf{v}}{\partial t}
++\mathbf{v}\cdot\nabla\mathbf{v}\right)
+=-\nabla p+\eta\nabla^2\mathbf{v}
++\left(\zeta+\frac{\eta}{3}\right)\nabla(\nabla\cdot\mathbf{v}),
 $$
 
 $$
-\frac{\partial}{\partial t}\left(\epsilon+\frac12\rho|\mathbf v|^2\right)
+\frac{\partial}{\partial t}\left(\epsilon+\frac12\rho|\mathbf{v}|^2\right)
 +\nabla\cdot\left[
-\left(p+\epsilon+\frac12\rho|\mathbf v|^2\right)\mathbf v
--\mathbf v\cdot\boldsymbol\sigma'
+\left(p+\epsilon+\frac12\rho|\mathbf{v}|^2\right)\mathbf{v}
+-\mathbf{v}\cdot\boldsymbol{\sigma}'
 \right]=0.
 $$
 
-$\rho$ 为质量密度，$\mathbf v=(v_x,v_y,v_z)$ 为速度，$p$ 为压力，$\epsilon=p/(\gamma-1)$ 为单位体积内能，$\eta,\zeta$ 分别为剪切和体黏性，$\boldsymbol\sigma'$ 为黏性应力。本例采用 $\gamma=5/3$、$\eta=\zeta=10^{-8}$ 和初始马赫数 $M_0=1$。马赫数衡量流速与声速之比；$M_0=1$ 表明压缩和膨胀不可忽略。
+$\rho$ 为质量密度，$\mathbf{v}=(v_x,v_y,v_z)$ 为速度，$p$ 为压力，$\epsilon=p/(\gamma-1)$ 为单位体积内能，$\eta,\zeta$ 分别为剪切和体黏性，$\boldsymbol{\sigma}'$ 为黏性应力。本例采用 $\gamma=5/3$、$\eta=\zeta=10^{-8}$ 和初始马赫数 $M_0=1$。马赫数衡量流速与声速之比；$M_0=1$ 表明压缩和膨胀不可忽略。
 
 涡量
 
 $$
-\boldsymbol\omega=\nabla\times\mathbf v
+\boldsymbol{\omega}=\nabla\times\mathbf{v}
 $$
 
-衡量局部旋转，速度散度 $\nabla\cdot\mathbf v$ 的负值/正值分别代表局部压缩/膨胀。动能谱 $E(k)$ 描述不同波数尺度上的速度能量。这些量把三维流场的“旋转性、压缩性和尺度结构”转化为可比较的物理诊断。
+衡量局部旋转，速度散度 $\nabla\cdot\mathbf{v}$ 的负值/正值分别代表局部压缩/膨胀。动能谱 $E(k)$ 描述不同波数尺度上的速度能量。这些量把三维流场的“旋转性、压缩性和尺度结构”转化为可比较的物理诊断。
 
 ### 4.2 前处理
 
 计算域为单位周期立方体，默认采用 $64^3$ 均匀网格和两层 ghost cell。密度与压力初值均匀；速度由有限个随机 Fourier 模态叠加：
 
 $$
-\mathbf v(\mathbf x,0)=\sum_m\mathbf A_m
-\sin(\mathbf k_m\cdot\mathbf x+\boldsymbol\phi_m).
+\mathbf{v}(\mathbf{x},0)=\sum_m\mathbf{A}_m
+\sin(\mathbf{k}_m\cdot\mathbf{x}+\boldsymbol{\phi}_m).
 $$
 
 官方程序在 Fourier 空间进行 Helmholtz 分解，削弱速度场的可压缩分量，使初态以近似无散的旋转运动为主，再把速度归一化到指定马赫数。不同 `init_key` 改变模态相位，生成遵循相同统计设置但涡结构位置不同的独立样本。周期边界让穿过一侧的流体从对侧进入，域内没有质量通量损失，适合检查总质量和总能量。
@@ -386,7 +385,7 @@ bash scripts/run_pipeline.sh \
 
 周期域总质量由 1 保持到 1，末时刻相对漂移为 0，中间约 $10^{-7}$ 的波动来自 float32 归约舍入。总能量相对漂移仅 $6.50\times10^{-5}$，而动能由 0.5904 降至 0.3120、平均压力由 0.6000 升至 0.7856。这组量应联合解释：大尺度运动能量减少的同时，压缩和数值耗散使内能/压力增加，总能量仍近似守恒。显式物理黏性接近零，但 HLLC–MUSCL 捕捉陡峭结构仍需数值耗散，所以动能下降不能全部归因于物理黏性。
 
-RMS 涡量表示旋转活动，RMS 散度表示压缩与膨胀强度。初态虽经 Helmholtz 分解而近似无散，但马赫数为 1 的非线性演化会产生明显密度波和散度，因此不能使用不可压缩假设把 $\nabla\cdot\mathbf v$ 视为零。
+RMS 涡量表示旋转活动，RMS 散度表示压缩与膨胀强度。初态虽经 Helmholtz 分解而近似无散，但马赫数为 1 的非线性演化会产生明显密度波和散度，因此不能使用不可压缩假设把 $\nabla\cdot\mathbf{v}$ 视为零。
 
 ![三维流动物理诊断](03_3d_compressible_turbulence/results/conservation_and_flow_diagnostics.png)
 
