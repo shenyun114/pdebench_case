@@ -16,7 +16,7 @@ dependencies:
   - python-dotenv
   - pyyaml>=6
   - clawpack=5.9
-  - pytorch=1.13.1
+  - pytorch=2.5.1
   - cpuonly
   - hatchling
   - hatch-vcs

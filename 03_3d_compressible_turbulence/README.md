@@ -74,6 +74,7 @@ HLLC 能区分左行波、接触波和右行波；MUSCL 在保持激波附近稳
 CPU 环境不需要 NVIDIA 驱动或 CUDA：
 
 ```bash
+set -eo pipefail
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/03_3d_compressible_turbulence
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
@@ -82,6 +83,7 @@ mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
   -f environment-cpu.yml
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 ```
 
@@ -100,6 +102,7 @@ bash scripts/setup_workspace.sh \
 环境约需数 GB，必须放到数据盘：
 
 ```bash
+set -eo pipefail
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/03_3d_compressible_turbulence
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
@@ -108,6 +111,7 @@ mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d" \
   -f environment.yml
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
 ```
 
@@ -190,8 +194,10 @@ pm_evolve = jax.pmap(jax.vmap(evolve, axis_name="j"), axis_name="i")
 ## 3.2 一键 CPU 复现
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 
@@ -209,8 +215,10 @@ bash scripts/run_pipeline.sh \
 ### 3.3.1 前处理
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 export CASE_DIR="$PWD"
@@ -263,8 +271,10 @@ python "$CASE_DIR/src/verify_results.py" \
 ## 3.4 一键 GPU 快速测试
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 
@@ -278,8 +288,10 @@ bash scripts/run_pipeline.sh \
 ## 3.5 一键 GPU 正式运行
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 

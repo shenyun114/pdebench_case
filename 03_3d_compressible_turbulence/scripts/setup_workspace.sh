@@ -26,7 +26,9 @@ if ! git -C "${PDEBENCH_ROOT}" diff --quiet || ! git -C "${PDEBENCH_ROOT}" diff 
   echo "错误：共享源码 ${PDEBENCH_ROOT} 存在未提交改动，请清理改动或指定新的 PDEBENCH_ROOT。" >&2
   exit 4
 fi
-git -C "${PDEBENCH_ROOT}" fetch --quiet origin "${PDEBENCH_COMMIT}"
+if ! git -C "${PDEBENCH_ROOT}" cat-file -e "${PDEBENCH_COMMIT}^{commit}" 2>/dev/null; then
+  git -C "${PDEBENCH_ROOT}" fetch --quiet origin "${PDEBENCH_COMMIT}"
+fi
 git -C "${PDEBENCH_ROOT}" checkout --quiet --detach "${PDEBENCH_COMMIT}"
 
 REQUIRED_BACKEND="$(python -c 'import sys, yaml; print(yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["case"].get("backend", "gpu"))' "${CONFIG}")"

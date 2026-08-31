@@ -124,12 +124,14 @@ flowchart LR
 ## 2.1 创建独立环境
 
 ```bash
+set -eo pipefail
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/01_radial_dam_break
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" -f environment.yml
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 ```
 
@@ -138,6 +140,7 @@ conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 把环境前缀放在 `/home/ubuntu/data` 可避免占用个人文件夹空间。若已有 `pdebench-fno` 且其中安装了 Clawpack，也可用于开发调试：
 
 ```bash
+eval "$(conda shell.bash hook)"
 conda activate pdebench-fno
 python -c "from clawpack import pyclaw, riemann; print('Clawpack OK')"
 ```
@@ -167,8 +170,10 @@ bash scripts/run_pipeline.sh "$PDEBENCH_CASE_DATA/pdebench-swe-custom" "$PDEBENC
 ## 3.2 一键运行
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-swe-demo"
@@ -237,8 +242,10 @@ HDF5 中各数组均有明确物理意义：
 这一阶段固定 PDEBench 源码版本、验证 Clawpack 求解器、建立数据盘工作目录，并把默认参数复制成此次实验的不可变配置记录。
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 export CASE_DIR="$PWD"

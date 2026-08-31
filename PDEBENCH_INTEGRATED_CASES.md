@@ -77,11 +77,14 @@ PDEBench 数据通常按“样本—时间—空间—变量”组织。对于�
 三个案例的代码可以从 Github 下载获取，DATA 路径可以根据本机环境自己配置，作为后续拉取代码、环境配置以及实验结果存放的目录。
 
 ```bash
+set -eo pipefail
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 ```
+
+运行前需要保证 `conda` 命令已经安装并可在当前终端中找到。后续命令块中的 `eval "$(conda shell.bash hook)"` 会直接初始化当前 Bash，因此不要求预先执行 `conda init` 或重新登录；`set -eo pipefail` 会在环境激活、求解或后处理任一步失败时立即停止，避免误用 base Python 继续运行。
 
 ---
 
@@ -146,6 +149,7 @@ $$
 本案例从官方求解器状态中同时提取 $h,u,v,hu,hv$，并写入带 $x,y,t$ 坐标和参数元数据的 HDF5。这样既保留训练数据常用的水深场，也能在后处理中计算动量、机械能、速度与 Froude 数。首次运行需要创建一次浅水波环境。对应的命令如下：
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
@@ -162,11 +166,13 @@ conda env create \
 - `ART` 保存 HDF5、日志、配置和后处理结果；
 - `CONFIG` 是本次实验实际使用的配置副本。
 
-前处理脚本会在 `$PDEBENCH_ROOT` 不存在时自动下载完整 PDEBench，检出固定提交，并验证 PyClaw 浅水波求解器能够导入。该阶段只准备源码、目录和配置，不进行浅水波数值求解。前处理、算法运行和后处理应在同一个终端中依次执行，以便后续命令继续使用这些路径变量。
+前处理脚本会在 `$PDEBENCH_ROOT` 不存在时自动下载完整 PDEBench，检出固定提交，并验证 PyClaw 浅水波求解器能够导入。如果共享仓库已经包含该提交，脚本会直接使用本地对象，不再重复访问 GitHub。该阶段只准备源码、目录和配置，不进行浅水波数值求解。前处理、算法运行和后处理应在同一个终端中依次执行，以便后续命令继续使用这些路径变量。
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 export CASE_DIR="$PWD"
@@ -302,6 +308,7 @@ $$
 首次运行需要创建一次反应–扩散环境。以下命令把 Conda 环境放在数据盘：
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
@@ -310,11 +317,13 @@ conda env create \
   -f 02_reaction_diffusion/environment.yml
 ```
 
-环境创建完成后，执行下面的前处理命令。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。`PDEBENCH_ROOT` 指定三个案例共用的一份 PDEBench 官方源码，`WORK_ROOT` 指定本次反应–扩散实验的独立目录，`ART` 保存 HDF5、日志和图像，`CONFIG` 是本次实验实际使用的配置副本。脚本会自动下载并固定 PDEBench 提交、检查反应–扩散求解器是否可以导入，但此时不会开始数值积分。前处理、算法运行和后处理应在同一个终端中依次执行，以便继续使用这些路径变量。
+环境创建完成后，执行下面的前处理命令。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。`PDEBENCH_ROOT` 指定三个案例共用的一份 PDEBench 官方源码，`WORK_ROOT` 指定本次反应–扩散实验的独立目录，`ART` 保存 HDF5、日志和图像，`CONFIG` 是本次实验实际使用的配置副本。脚本会自动下载并固定 PDEBench 提交、检查反应–扩散求解器是否可以导入；共享仓库已经包含固定提交时不会重复联网。此时不会开始数值积分。前处理、算法运行和后处理应在同一个终端中依次执行，以便继续使用这些路径变量。
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 export CASE_DIR="$PWD"
@@ -461,6 +470,7 @@ $32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已�
 首次运行需要创建一次三维 CFD 的 CPU 环境。以下命令把环境放在数据盘，不需要 NVIDIA 驱动或 CUDA：
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
@@ -471,11 +481,13 @@ conda env create \
 
 环境采用 `jax==0.4.38`。环境创建完成后，执行下面的前处理命令。对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。`PDEBENCH_ROOT` 指定三个案例共用的官方源码，`WORK_ROOT` 指定本次三维实验目录，`ART` 保存原始数组、HDF5、日志和图像，`CONFIG` 是实际使用的 CPU 配置副本。JAX 和 Matplotlib 的缓存也写入 `WORK_ROOT`，避免占用个人目录。
 
-前处理脚本会固定 PDEBench 提交、确认上游工作树没有修改、检查 JAX 确实使用 CPU 后端，并验证所需依赖。固定提交中的旧版 JAX 更新写法通过案例侧运行时兼容层适配，不会修改共享的 PDEBench 源文件。该阶段只准备环境、源码、配置和目录，不运行三维求解；三个阶段应在同一个终端中依次执行。
+前处理脚本会固定 PDEBench 提交、确认上游工作树没有修改、检查 JAX 确实使用 CPU 后端，并验证所需依赖。共享仓库已经包含固定提交时直接离线使用，只有缺少该提交时才执行 `git fetch`。固定提交中的旧版 JAX 更新写法通过案例侧运行时兼容层适配，不会修改共享的 PDEBench 源文件。该阶段只准备环境、源码、配置和目录，不运行三维求解；三个阶段应在同一个终端中依次执行。
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 export CASE_DIR="$PWD"

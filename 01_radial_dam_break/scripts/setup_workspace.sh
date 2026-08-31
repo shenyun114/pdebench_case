@@ -21,7 +21,9 @@ if ! git -C "${REPO}" diff --quiet || ! git -C "${REPO}" diff --cached --quiet; 
   exit 3
 fi
 
-git -C "${REPO}" fetch --quiet origin "${COMMIT}"
+if ! git -C "${REPO}" cat-file -e "${COMMIT}^{commit}" 2>/dev/null; then
+  git -C "${REPO}" fetch --quiet origin "${COMMIT}"
+fi
 git -C "${REPO}" checkout --quiet --detach "${COMMIT}"
 mkdir -p "${WORK_ROOT}/artifacts"
 

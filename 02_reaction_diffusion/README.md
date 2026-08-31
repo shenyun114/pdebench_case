@@ -96,12 +96,14 @@ flowchart LR
 ## 2.1 创建环境
 
 ```bash
+set -eo pipefail
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/02_reaction_diffusion
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff" -f environment.yml
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 ```
 
@@ -122,8 +124,10 @@ bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
 ## 3.1 运行完整流水线
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
@@ -176,8 +180,10 @@ HDF5 中 `u` 和 `v` 的形状均为 `(101,128,128)`，另外保存 `x、y、t` 
 ### 3.3.1 前处理
 
 ```bash
+set -eo pipefail
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
 export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
+eval "$(conda shell.bash hook)"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 export CASE_DIR="$PWD"
