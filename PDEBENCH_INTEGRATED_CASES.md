@@ -158,6 +158,18 @@ conda env create \
   -f 01_radial_dam_break/environment.yml
 ```
 
+上面的默认环境从 Conda 的 `pytorch` 和 `conda-forge` channel 安装 CPU PyTorch。若所在服务器在求解这两个 channel 的 Pillow、JPEG 和 PyTorch 依赖时报告 `LibMambaUnsatisfiableError`，可改用 [`environment-pip-cpu.yml`](01_radial_dam_break/environment-pip-cpu.yml)。该配置只从 `conda-forge` 安装数值计算和无 GUI 绘图库，再从 PyTorch 官方 CPU wheel 索引安装 `torch==2.5.1`。两种环境生成的数值场和物理指标一致；以下替代命令仍使用相同的环境路径，因此后续命令不需要修改。默认环境与替代环境只需选择一种，不要在已经创建完成的同一前缀上重复安装。
+
+```bash
+set -eo pipefail
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+cd "$(git rev-parse --show-toplevel)"
+mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" \
+  -f 01_radial_dam_break/environment-pip-cpu.yml
+```
+
 环境创建完成后，执行下面的前处理命令。对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。其中：
 
 - `PDEBENCH_CASE_DATA` 指定环境和实验结果所在的数据盘；

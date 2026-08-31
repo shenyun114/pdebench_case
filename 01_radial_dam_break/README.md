@@ -137,6 +137,19 @@ conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 
 该案例完全在 CPU 上运行，不需要 CUDA。环境包含 Python、NumPy、HDF5、Matplotlib/Pillow、PyTorch（上游源码初始化时使用）以及 Clawpack/PyClaw。
 
+如果默认配置在当前服务器上因 Conda 的 Pillow、JPEG 与 PyTorch 包组合而出现 `LibMambaUnsatisfiableError`，可以改用 [`environment-pip-cpu.yml`](environment-pip-cpu.yml)。它使用 `matplotlib-base` 避免安装 Qt，并通过 PyTorch 官方 CPU wheel 索引安装 `torch==2.5.1+cpu`。默认配置与替代配置只需选择一种；以下命令沿用相同环境前缀，因此后续运行命令保持不变：
+
+```bash
+set -eo pipefail
+export PDEBENCH_CASE_DATA=/home/ubuntu/data
+mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
+conda env create \
+  --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" \
+  -f environment-pip-cpu.yml
+eval "$(conda shell.bash hook)"
+conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
+```
+
 把环境前缀放在 `/home/ubuntu/data` 可避免占用个人文件夹空间。若已有 `pdebench-fno` 且其中安装了 Clawpack，也可用于开发调试：
 
 ```bash

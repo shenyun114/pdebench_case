@@ -1,6 +1,5 @@
-name: pdebench-swe
+name: pdebench-swe-pip-cpu
 channels:
-  - pytorch
   - conda-forge
 dependencies:
   - python=3.10
@@ -8,7 +7,7 @@ dependencies:
   - numpy=1.26
   - scipy=1.15
   - h5py=3.13
-  - matplotlib=3.10
+  - matplotlib-base=3.10
   - pillow=10.4
   - imageio>=2.36
   - tqdm
@@ -16,7 +15,8 @@ dependencies:
   - python-dotenv
   - pyyaml>=6
   - clawpack=5.9
-  - pytorch=2.5.1
-  - cpuonly
   - hatchling
   - hatch-vcs
+  - pip:
+      - --index-url https://download.pytorch.org/whl/cpu
+      - torch==2.5.1
