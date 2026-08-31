@@ -10,6 +10,7 @@
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 ```
 
 案例脚本会将 Conda 环境、固定版本 PDEBench、HDF5、原始 NPY、日志和缓存写入 `PDEBENCH_CASE_DATA`。因此代码仓库占用空间较小，大体积结果不会写入个人文件夹。
@@ -26,22 +27,28 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的
 ```text
 GitHub: pdebench/PDEBench
         ↓ git clone + 固定到 4ff3e3a4...
-$WORK_ROOT/PDEBench
-        ↓ 被案例求解脚本导入或执行
-HDF5、物理诊断和可视化结果
+$PDEBENCH_ROOT（默认 /home/ubuntu/data/pdebench-upstream/PDEBench）
+        ↓ 三个案例共同导入或执行
+各自 WORK_ROOT 中的 HDF5、物理诊断和可视化结果
 ```
 
-默认工作目录对应为：
+源码路径和结果路径相互独立：
 
-| 案例 | 自动下载的 PDEBench 位置 | 实际使用的上游实现 |
-|---|---|---|
-| 浅水波 | `/home/ubuntu/data/pdebench-swe-staged/PDEBench` | `pdebench/data_gen/src/sim_radial_dam_break.py` 中的 `RadialDamBreak2D` |
-| 反应–扩散 | `/home/ubuntu/data/pdebench-reacdiff-staged/PDEBench` | `pdebench/data_gen/src/sim_diff_react.py` 中的 `Simulator` |
-| 三维 CFD | `/home/ubuntu/data/pdebench-cfd3d-cpu-staged/PDEBench` | `pdebench/data_gen/data_gen_NLE/CompressibleFluid/CFD_multi_Hydra.py` 及其 JAX 求解组件 |
+| 案例 | 官方源码位置 | 独立结果目录 | 实际使用的上游实现 |
+|---|---|---|---|
+| 浅水波 | `$PDEBENCH_ROOT` | `/home/ubuntu/data/pdebench-swe-staged` | `pdebench/data_gen/src/sim_radial_dam_break.py` 中的 `RadialDamBreak2D` |
+| 反应–扩散 | `$PDEBENCH_ROOT` | `/home/ubuntu/data/pdebench-reacdiff-staged` | `pdebench/data_gen/src/sim_diff_react.py` 中的 `Simulator` |
+| 三维 CFD | `$PDEBENCH_ROOT` | `/home/ubuntu/data/pdebench-cfd3d-cpu-staged` | `pdebench/data_gen/data_gen_NLE/CompressibleFluid/CFD_multi_Hydra.py` 及其 JAX 求解组件 |
 
-脚本克隆的是完整上游仓库，但每个案例只执行与自身方程相关的模块。`pdebench_case` 中的三个主案例不调用上游 FNO、U-Net 或 PINN 训练代码。服务器上若已有 `/home/ubuntu/HW/Case/PDEBench`，本复现流程也不会隐式使用它；实际使用的是 `$WORK_ROOT/PDEBench` 中经过提交校验的独立检出。
+脚本克隆的是完整上游仓库，但每个案例只执行与自身方程相关的模块。`pdebench_case` 中的三个主案例不调用上游 FNO、U-Net 或 PINN 训练代码。服务器上若已有 `/home/ubuntu/HW/Case/PDEBench`，本复现流程也不会隐式使用它；实际使用的是 `$PDEBENCH_ROOT` 中经过提交校验的检出。
 
-为使三个案例能够各自独立复现，当前默认会在三个 `WORK_ROOT` 下分别检出一份上游仓库。如果只运行一个案例，只会产生该案例的一份上游工作副本。
+三个案例默认共用同一份源码，因此运行全部案例也只下载一份 PDEBench。若要改变位置，在前处理之前设置绝对路径即可：
+
+```bash
+export PDEBENCH_ROOT=/mnt/data/shared-src/PDEBench
+```
+
+如果不显式设置，脚本使用 `${PDEBENCH_CASE_DATA}/pdebench-upstream/PDEBench`。不要把 `PDEBENCH_ROOT` 设置成某个案例的 `WORK_ROOT`；前者保存只读上游源码，后者保存可删除或重建的实验结果。
 
 ## 3. 集中创建三个 CPU 环境
 

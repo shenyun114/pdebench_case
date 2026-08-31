@@ -77,6 +77,7 @@ CPU 环境不需要 NVIDIA 驱动或 CUDA：
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/03_3d_compressible_turbulence
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
@@ -102,6 +103,7 @@ bash scripts/setup_workspace.sh \
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/03_3d_compressible_turbulence
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d" \
@@ -189,6 +191,7 @@ pm_evolve = jax.pmap(jax.vmap(evolve, axis_name="j"), axis_name="i")
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 
@@ -207,6 +210,7 @@ bash scripts/run_pipeline.sh \
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 export CASE_DIR="$PWD"
@@ -221,7 +225,7 @@ bash scripts/setup_workspace.sh "$WORK_ROOT" configs/cpu.yaml
 cp configs/cpu.yaml "$CONFIG"
 ```
 
-前处理由 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 完成：固定 PDEBench 提交、核验上游工作树、检查 JAX CPU 后端和依赖，并创建缓存与输出目录。[`configs/cpu.yaml`](configs/cpu.yaml) 定义 $32^3$ 网格、单样本、3 个输出时刻和关闭性能测试的 CPU 默认参数；[`src/jax_loc_compat.py`](src/jax_loc_compat.py) 在运行时兼容固定上游代码使用的旧版 JAX 更新接口，不修改 PDEBench 源文件。
+前处理由 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 完成：固定 PDEBench 提交、核验上游工作树、检查 JAX CPU 后端和依赖，并创建缓存与输出目录。`PDEBENCH_ROOT` 指定三个案例共用的源码位置，`WORK_ROOT` 指定本案例结果和缓存位置。[`configs/cpu.yaml`](configs/cpu.yaml) 定义 $32^3$ 网格、单样本、3 个输出时刻和关闭性能测试的 CPU 默认参数；[`src/jax_loc_compat.py`](src/jax_loc_compat.py) 在运行时兼容固定上游代码使用的旧版 JAX 更新接口，不修改 PDEBench 源文件。
 
 ### 3.3.2 算法运行
 
@@ -260,6 +264,7 @@ python "$CASE_DIR/src/verify_results.py" \
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 
@@ -274,6 +279,7 @@ bash scripts/run_pipeline.sh \
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 

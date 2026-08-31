@@ -3,7 +3,7 @@ set -euo pipefail
 
 DATA_ROOT="${PDEBENCH_CASE_DATA:-/home/ubuntu/data}"
 WORK_ROOT="${1:-${DATA_ROOT}/pdebench-swe-demo}"
-REPO="${WORK_ROOT}/PDEBench"
+REPO="${PDEBENCH_ROOT:-${DATA_ROOT}/pdebench-upstream/PDEBench}"
 COMMIT="4ff3e3a4aa1561721b5571fa3a048a0a463e0568"
 
 if [[ -z "${CONDA_PREFIX:-}" ]]; then
@@ -11,13 +11,13 @@ if [[ -z "${CONDA_PREFIX:-}" ]]; then
   exit 2
 fi
 
-mkdir -p "${WORK_ROOT}"
+mkdir -p "${WORK_ROOT}" "$(dirname "${REPO}")"
 if [[ ! -d "${REPO}/.git" ]]; then
   git clone https://github.com/pdebench/PDEBench.git "${REPO}"
 fi
 
 if ! git -C "${REPO}" diff --quiet || ! git -C "${REPO}" diff --cached --quiet; then
-  echo "错误：${REPO} 存在未提交改动，请使用新的工作目录。" >&2
+  echo "错误：共享源码 ${REPO} 存在未提交改动，请清理改动或指定新的 PDEBENCH_ROOT。" >&2
   exit 3
 fi
 
@@ -33,4 +33,5 @@ PY
 )
 
 echo "工作区就绪：${WORK_ROOT}"
+echo "共享 PDEBench 源码：${REPO}"
 echo "PDEBench 提交：$(git -C "${REPO}" rev-parse HEAD)"

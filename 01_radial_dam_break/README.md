@@ -127,6 +127,7 @@ flowchart LR
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/01_radial_dam_break
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" -f environment.yml
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
@@ -167,6 +168,7 @@ bash scripts/run_pipeline.sh "$PDEBENCH_CASE_DATA/pdebench-swe-custom" "$PDEBENC
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-swe-demo"
@@ -236,11 +238,12 @@ HDF5 中各数组均有明确物理意义：
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 export CASE_DIR="$PWD"
 export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-swe-staged"
-export REPO="$WORK_ROOT/PDEBench"
+export REPO="$PDEBENCH_ROOT"
 export ART="$WORK_ROOT/artifacts"
 export CONFIG="$ART/resolved_config.yaml"
 
@@ -249,7 +252,7 @@ mkdir -p "$ART/results"
 cp configs/default.yaml "$CONFIG"
 ```
 
-前处理入口是 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh)，参数来源是 [`configs/default.yaml`](configs/default.yaml)。输出为固定提交的 `$REPO`、结果目录 `$ART/results` 和配置副本 `$CONFIG`。
+前处理入口是 [`scripts/setup_workspace.sh`](scripts/setup_workspace.sh)，参数来源是 [`configs/default.yaml`](configs/default.yaml)。`PDEBENCH_ROOT` 指定共用源码位置，`WORK_ROOT` 指定本案例输出位置；输出为固定提交的 `$REPO`、结果目录 `$ART/results` 和配置副本 `$CONFIG`。
 
 ### 3.4.2 算法运行
 

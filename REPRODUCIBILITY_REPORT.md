@@ -1,6 +1,6 @@
 # 复现测试与参考案例对照报告
 
-本报告记录截至 2026-08-29 的实际执行证据。除一键流水线测试外，三个主案例还分别从新的空目录按“前处理—算法运行—后处理”命令完整执行，验证各阶段可以独立调用。所有环境、HDF5、原始数组、缓存和日志均位于 `/home/ubuntu/data`。
+本报告记录截至 2026-08-31 的实际执行证据。除一键流水线测试外，三个主案例还分别从新的空目录按“前处理—算法运行—后处理”命令完整执行，验证各阶段可以独立调用。所有环境、HDF5、原始数组、缓存和日志均位于 `/home/ubuntu/data`。
 
 ## 与 `ref-case` 的结构对照
 
@@ -37,6 +37,10 @@
 | 反应–扩散分阶段复现 | `/home/ubuntu/data/pdebench-reacdiff-staged-doc-test-20260829` |
 | 3D CFD CPU 环境 | `/home/ubuntu/data/pdebench-case-envs/cfd3d-cpu` |
 | 3D CFD CPU 分阶段复现 | `/home/ubuntu/data/pdebench-cfd3d-cpu-staged-doc-test-20260829` |
+| 三案例共享源码回归 | `/home/ubuntu/data/pdebench-upstream-shared-test-20260831/PDEBench` |
+| 共享源码浅水波结果 | `/home/ubuntu/data/pdebench-swe-shared-test-20260831` |
+| 共享源码反应–扩散结果 | `/home/ubuntu/data/pdebench-reacdiff-shared-test-20260831` |
+| 共享源码 3D CPU 结果 | `/home/ubuntu/data/pdebench-cfd3d-shared-test-20260831` |
 | 3D CFD 新环境 | `/home/ubuntu/data/pdebench-case-envs/cfd3d` |
 | 3D CFD 首次失败证据 | `/home/ubuntu/data/pdebench-cfd3d-smoke/artifacts/logs/dataset.log` |
 | 3D CFD smoke PASS | `/home/ubuntu/data/pdebench-cfd3d-smoke-02/artifacts` |
@@ -127,6 +131,12 @@
 固定提交、随机种子、配置和主依赖版本后，场形状、正性、守恒指标及图像内容应一致；GPU 浮点归约和库小版本可能造成末位差异。墙钟时间受到共享服务器负载、JIT 缓存、GPU 时钟和数据盘 I/O 影响，因此只作为本机证据，不设置严格 PASS 阈值。
 
 案例一、二的网格误差以最细数值解为参考，是 self-convergence/grid consistency，不是解析误差。案例三的 $k^{-5/3}$ 线只是谱斜率参考，$64^3$ 短时可压缩流不能被夸大为充分发展的 Kolmogorov 惯性区。
+
+## 共享 PDEBench 源码回归
+
+2026-08-31 使用同一个 `PDEBENCH_ROOT=/home/ubuntu/data/pdebench-upstream-shared-test-20260831/PDEBench` 依次执行三个案例。首次浅水波前处理完成唯一一次克隆，随后反应–扩散和三维前处理复用该目录；目录检查只有 1 个 `.git`，三次提交校验均为 `4ff3e3a4aa1561721b5571fa3a048a0a463e0568`。
+
+三套完整流水线随后均通过：浅水波主求解 `0.957 s`，反应–扩散主积分 `10.574 s`，三维 CPU 数据阶段 `43.471 s`；三者的 HDF5、PNG/GIF、物理诊断和自动验收均输出 PASS。这证明 `PDEBENCH_ROOT` 可以与三个独立 `WORK_ROOT` 配合使用，运行全部案例不需要下载三份 PDEBench。
 
 ## 目录重组与重复代码清理
 

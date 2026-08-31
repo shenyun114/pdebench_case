@@ -88,11 +88,12 @@ PDEBench 数据通常按“样本—时间—空间—变量”组织。对于�
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 ```
 
 统一的源码位置、环境管理和重复运行注意事项见[环境与复现补充说明](ENVIRONMENT_AND_REPRODUCTION.md)。
 
-`pdebench_case` 只保存案例配置、调用脚本和后处理代码，不重复内置 PDEBench。执行各案例的 `setup_workspace.sh` 时，脚本会从 `https://github.com/pdebench/PDEBench.git` 自动克隆完整上游仓库到当前案例的 `$WORK_ROOT/PDEBench`，并检出固定提交 `4ff3e3a4...`。随后浅水波和反应–扩散脚本直接导入上游 Python 模块，三维案例直接调用上游 `CFD_multi_Hydra.py`；因此无需另外准备 `/home/ubuntu/HW/Case/PDEBench`。
+`pdebench_case` 只保存案例配置、调用脚本和后处理代码，不重复内置 PDEBench。执行任一案例的 `setup_workspace.sh` 时，脚本会从 `https://github.com/pdebench/PDEBench.git` 自动克隆完整上游仓库到 `$PDEBENCH_ROOT`，并检出固定提交 `4ff3e3a4...`。三个案例默认共用 `/home/ubuntu/data/pdebench-upstream/PDEBench`，因此完整源码只下载一份；随后浅水波和反应–扩散脚本直接导入上游 Python 模块，三维案例直接调用上游 `CFD_multi_Hydra.py`。用户可以修改 `PDEBENCH_ROOT` 指定其他源码位置，无需另外准备 `/home/ubuntu/HW/Case/PDEBench`。
 
 ---
 
@@ -165,15 +166,16 @@ conda env create \
   -f 01_radial_dam_break/environment.yml
 ```
 
-以下前处理命令固定源码并准备配置。对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。该阶段把固定版本 PDEBench 放到数据盘，并生成本次实验独立使用的配置副本。前处理、算法运行和后处理命令应在同一个终端中依次执行，以便复用路径变量。
+以下前处理命令固定源码并准备配置。对应代码为 [`scripts/setup_workspace.sh`](01_radial_dam_break/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](01_radial_dam_break/configs/default.yaml)。`PDEBENCH_ROOT` 指定三个案例共用的官方源码位置，`WORK_ROOT` 只指定本案例的结果、配置和缓存位置；二者可以分别修改。前处理、算法运行和后处理命令应在同一个终端中依次执行，以便复用路径变量。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe"
 cd "$(git rev-parse --show-toplevel)/01_radial_dam_break"
 export CASE_DIR="$PWD"
 export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-swe-staged"
-export REPO="$WORK_ROOT/PDEBench"
+export REPO="$PDEBENCH_ROOT"
 export ART="$WORK_ROOT/artifacts"
 export CONFIG="$ART/resolved_config.yaml"
 
@@ -304,15 +306,16 @@ conda env create \
   -f 02_reaction_diffusion/environment.yml
 ```
 
-以下前处理命令固定源码、建立工作目录并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。三个阶段应在同一个终端中依次执行。
+以下前处理命令固定源码、建立工作目录并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](02_reaction_diffusion/scripts/setup_workspace.sh) 和 [`configs/default.yaml`](02_reaction_diffusion/configs/default.yaml)。`PDEBENCH_ROOT` 是共用官方源码路径，`WORK_ROOT` 是反应–扩散结果路径；修改其中一个不会改变另一个。三个阶段应在同一个终端中依次执行。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 export CASE_DIR="$PWD"
 export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
-export REPO="$WORK_ROOT/PDEBench"
+export REPO="$PDEBENCH_ROOT"
 export ART="$WORK_ROOT/artifacts"
 export CONFIG="$ART/resolved_config.yaml"
 
@@ -477,10 +480,11 @@ conda env create \
 
 该环境采用 `jax==0.4.38`，不需要 NVIDIA 驱动或 CUDA。
 
-以下前处理命令固定源码、检查 CPU 后端并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。兼容层在运行时适配旧版 JAX 更新语法，不修改下载的 PDEBench 源码。三个阶段应在同一个终端中依次执行。
+以下前处理命令固定源码、检查 CPU 后端并冻结配置。对应代码为 [`scripts/setup_workspace.sh`](03_3d_compressible_turbulence/scripts/setup_workspace.sh)、[`configs/cpu.yaml`](03_3d_compressible_turbulence/configs/cpu.yaml) 和 [`src/jax_loc_compat.py`](03_3d_compressible_turbulence/src/jax_loc_compat.py)。`PDEBENCH_ROOT` 是共用官方源码路径，`WORK_ROOT` 是三维结果及 JAX/Matplotlib 缓存路径；兼容层只在运行时适配旧版 JAX 更新语法，不修改共享源码。三个阶段应在同一个终端中依次执行。
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu"
 cd "$(git rev-parse --show-toplevel)/03_3d_compressible_turbulence"
 export CASE_DIR="$PWD"

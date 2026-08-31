@@ -99,6 +99,7 @@ flowchart LR
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case/02_reaction_diffusion
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff" -f environment.yml
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
@@ -122,6 +123,7 @@ bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 bash scripts/setup_workspace.sh "$PDEBENCH_CASE_DATA/pdebench-reacdiff-demo"
@@ -175,11 +177,12 @@ HDF5 中 `u` 和 `v` 的形状均为 `(101,128,128)`，另外保存 `x、y、t` 
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 conda activate "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff"
 cd "$(git rev-parse --show-toplevel)/02_reaction_diffusion"
 export CASE_DIR="$PWD"
 export WORK_ROOT="$PDEBENCH_CASE_DATA/pdebench-reacdiff-staged"
-export REPO="$WORK_ROOT/PDEBench"
+export REPO="$PDEBENCH_ROOT"
 export ART="$WORK_ROOT/artifacts"
 export CONFIG="$ART/resolved_config.yaml"
 
@@ -188,7 +191,7 @@ mkdir -p "$ART/results"
 cp configs/default.yaml "$CONFIG"
 ```
 
-[`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 克隆并固定 PDEBench，验证反应–扩散模拟器可以导入；[`configs/default.yaml`](configs/default.yaml) 定义网格、边界、随机种子、扩散系数和输出时刻。前处理输出 `$REPO`、`$CONFIG` 和空的结果目录。
+[`scripts/setup_workspace.sh`](scripts/setup_workspace.sh) 克隆并固定 PDEBench，验证反应–扩散模拟器可以导入；[`configs/default.yaml`](configs/default.yaml) 定义网格、边界、随机种子、扩散系数和输出时刻。`PDEBENCH_ROOT` 指定共用源码位置，`WORK_ROOT` 指定本案例输出位置；前处理输出 `$REPO`、`$CONFIG` 和空的结果目录。
 
 ### 3.3.2 算法运行
 

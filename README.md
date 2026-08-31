@@ -10,9 +10,10 @@
 git clone https://github.com/shenyun114/pdebench_case.git
 cd pdebench_case
 export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机容量充足的数据盘
+export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 ```
 
-案例代码可位于任意普通目录；Conda 环境、自动下载的固定版本 PDEBench、HDF5、日志和缓存写入 `PDEBENCH_CASE_DATA`。
+案例代码可位于任意普通目录；三个案例默认共用 `PDEBENCH_ROOT` 指定的一份固定版本 PDEBench。Conda 环境、HDF5、日志和缓存写入 `PDEBENCH_CASE_DATA`，各案例结果目录彼此独立。
 
 | 内容 | 维度与方程 | 数值/性能重点 | 主要可视化 | 定位 |
 |---|---|---|---|---|

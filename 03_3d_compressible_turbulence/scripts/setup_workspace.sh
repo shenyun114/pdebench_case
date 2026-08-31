@@ -5,7 +5,7 @@ CASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DATA_ROOT="${PDEBENCH_CASE_DATA:-/home/ubuntu/data}"
 WORK_ROOT="${1:-${DATA_ROOT}/pdebench-cfd3d-demo}"
 CONFIG="${2:-${CASE_DIR}/configs/default.yaml}"
-PDEBENCH_ROOT="${WORK_ROOT}/PDEBench"
+PDEBENCH_ROOT="${PDEBENCH_ROOT:-${DATA_ROOT}/pdebench-upstream/PDEBench}"
 PDEBENCH_COMMIT="4ff3e3a4aa1561721b5571fa3a048a0a463e0568"
 
 if [[ -z "${CONDA_PREFIX:-}" ]]; then
@@ -16,14 +16,14 @@ if [[ ! -f "${CONFIG}" ]]; then
   echo "错误：配置文件不存在：${CONFIG}" >&2
   exit 3
 fi
-mkdir -p "${WORK_ROOT}/artifacts/logs"
+mkdir -p "${WORK_ROOT}/artifacts/logs" "$(dirname "${PDEBENCH_ROOT}")"
 export PYTHONPYCACHEPREFIX="${WORK_ROOT}/python-cache"
 
 if [[ ! -d "${PDEBENCH_ROOT}/.git" ]]; then
   git clone https://github.com/pdebench/PDEBench.git "${PDEBENCH_ROOT}"
 fi
 if ! git -C "${PDEBENCH_ROOT}" diff --quiet || ! git -C "${PDEBENCH_ROOT}" diff --cached --quiet; then
-  echo "错误：${PDEBENCH_ROOT} 存在未提交改动，请使用新的工作目录。" >&2
+  echo "错误：共享源码 ${PDEBENCH_ROOT} 存在未提交改动，请清理改动或指定新的 PDEBENCH_ROOT。" >&2
   exit 4
 fi
 git -C "${PDEBENCH_ROOT}" fetch --quiet origin "${PDEBENCH_COMMIT}"
@@ -63,4 +63,4 @@ if [[ -n "$(git -C "${PDEBENCH_ROOT}" status --short)" ]]; then
   git -C "${PDEBENCH_ROOT}" status --short >&2
   exit 7
 fi
-echo "工作区就绪：${WORK_ROOT}；后端 ${REQUIRED_BACKEND}；PDEBench ${COMMIT}（干净）"
+echo "工作区就绪：${WORK_ROOT}；共享源码 ${PDEBENCH_ROOT}；后端 ${REQUIRED_BACKEND}；PDEBench ${COMMIT}（干净）"

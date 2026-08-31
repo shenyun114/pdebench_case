@@ -6,6 +6,7 @@ DATA_ROOT="${PDEBENCH_CASE_DATA:-/home/ubuntu/data}"
 WORK_ROOT="${1:-${DATA_ROOT}/pdebench-cfd3d-demo}"
 CONFIG_INPUT="${2:-${CASE_DIR}/configs/default.yaml}"
 ARTIFACTS="${WORK_ROOT}/artifacts"
+export PDEBENCH_ROOT="${PDEBENCH_ROOT:-${DATA_ROOT}/pdebench-upstream/PDEBench}"
 
 if [[ -z "${CONDA_PREFIX:-}" ]]; then
   echo "错误：请先激活 cfd3d 环境。" >&2
