@@ -92,6 +92,8 @@ export PDEBENCH_CASE_DATA=/home/ubuntu/data  # 可替换为本机数据盘
 
 统一的源码位置、环境管理和重复运行注意事项见[环境与复现补充说明](ENVIRONMENT_AND_REPRODUCTION.md)。
 
+`pdebench_case` 只保存案例配置、调用脚本和后处理代码，不重复内置 PDEBench。执行各案例的 `setup_workspace.sh` 时，脚本会从 `https://github.com/pdebench/PDEBench.git` 自动克隆完整上游仓库到当前案例的 `$WORK_ROOT/PDEBench`，并检出固定提交 `4ff3e3a4...`。随后浅水波和反应–扩散脚本直接导入上游 Python 模块，三维案例直接调用上游 `CFD_multi_Hydra.py`；因此无需另外准备 `/home/ubuntu/HW/Case/PDEBench`。
+
 ---
 
 ## 2. 案例一：二维径向溃坝浅水波
@@ -156,6 +158,7 @@ PDEBench 原保存接口主要面向水深数据，本案例从官方求解器�
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-swe" \
@@ -294,6 +297,7 @@ $$
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/conda-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/conda-envs/pdebench-reacdiff" \
@@ -464,6 +468,7 @@ $32^3$ 配置用于普通 CPU 上验证完整流程。本文展示图采用已�
 
 ```bash
 export PDEBENCH_CASE_DATA=/home/ubuntu/data
+cd "$(git rev-parse --show-toplevel)"
 mkdir -p "$PDEBENCH_CASE_DATA/pdebench-case-envs"
 conda env create \
   --prefix "$PDEBENCH_CASE_DATA/pdebench-case-envs/cfd3d-cpu" \
