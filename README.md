@@ -48,13 +48,13 @@ export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 
 ### 二维浅水波：径向重力波与自由液面
 
-动画左侧显示水深，右侧显示速度大小和方向；环形水深波前与速度带同步向外传播。
+动画左侧显示水深，右侧显示速度大小和方向；环形水深波前与速度带同步向外传播。两个面板在完整动画中使用固定色标。
 
 ![二维浅水波演化](01_radial_dam_break/results/shallow_water_evolution.gif)
 
 ### 二维反应–扩散：两个浓度场形成耦合空间结构
 
-动画同步显示激活场、恢复场和局部反应源，可观察随机高频初值被平滑并逐渐形成相关相区。
+动画同步显示激活场、恢复场和局部反应源，可观察随机高频初值被平滑并逐渐形成相关相区；三个面板均使用固定色标。
 
 ![二维反应扩散演化](02_reaction_diffusion/results/reaction_diffusion_evolution.gif)
 

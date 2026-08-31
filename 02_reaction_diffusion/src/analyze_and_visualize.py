@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import h5py
@@ -13,8 +14,16 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib import animation  # noqa: E402
 from pdebench_operators import apply_laplacian, neumann_laplacian  # noqa: E402
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPOSITORY_ROOT))
+from case_utils.animation import (  # noqa: E402
+    axes_pixel_boxes,
+    capture_rgb,
+    freeze_figure_layout,
+    save_fixed_palette_gif,
+)
 
 
 def gradients(field: np.ndarray, dx: float, dy: float) -> tuple[np.ndarray, np.ndarray]:
@@ -243,9 +252,9 @@ def main() -> None:
     for axis, title in zip(axes, ["Activator u", "Inhibitor v", "Reaction source Ru"]):
         axis.set(title=title, xlabel="x", ylabel="y")
         axis.set_aspect("equal")
-    fig.colorbar(image_u, ax=axes[0], shrink=0.78)
-    fig.colorbar(image_v, ax=axes[1], shrink=0.78)
-    fig.colorbar(image_r, ax=axes[2], shrink=0.78)
+    bar_u = fig.colorbar(image_u, ax=axes[0], shrink=0.78)
+    bar_v = fig.colorbar(image_v, ax=axes[1], shrink=0.78)
+    bar_r = fig.colorbar(image_r, ax=axes[2], shrink=0.78)
     title = fig.suptitle("t=0.00 | corr(u,v)=0.000", fontsize=14)
 
     def update(index: int):
@@ -255,8 +264,19 @@ def main() -> None:
         title.set_text(f"t={t[index]:.2f} | corr(u,v)={correlation[index]:.3f}")
         return image_u, image_v, image_r, title
 
-    movie = animation.FuncAnimation(fig, update, frames=range(0, len(t), 4), interval=100, blit=False)
-    movie.save(args.output / "reaction_diffusion_evolution.gif", writer=animation.PillowWriter(fps=10), dpi=90)
+    animation_indices = list(range(0, len(t), 4))
+    freeze_figure_layout(fig, dpi=90)
+    colorbar_boxes = axes_pixel_boxes(fig, [bar_u.ax, bar_v.ax, bar_r.ax])
+    frames = []
+    for index in animation_indices:
+        update(index)
+        frames.append(capture_rgb(fig))
+    save_fixed_palette_gif(
+        frames,
+        args.output / "reaction_diffusion_evolution.gif",
+        duration_ms=100,
+        static_boxes=colorbar_boxes,
+    )
     plt.close(fig)
     print(json.dumps(metrics, indent=2))
 

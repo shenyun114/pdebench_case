@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import h5py
-import imageio.v2 as imageio
 import matplotlib
 
 matplotlib.use("Agg")
@@ -17,6 +17,15 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from skimage.measure import marching_cubes
 
 from common import load_config, write_json
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPOSITORY_ROOT))
+from case_utils.animation import (  # noqa: E402
+    axes_pixel_boxes,
+    capture_rgb,
+    freeze_figure_layout,
+    save_fixed_palette_gif,
+)
 
 
 def derivatives(vx: np.ndarray, vy: np.ndarray, vz: np.ndarray, dx: float):
@@ -75,25 +84,43 @@ def add_isosurface(ax, field, level, color, face_limit, title):
     return len(vertices), len(faces)
 
 
-def render_frame(rho, vort, div, time_value, limits):
-    mid = rho.shape[0] // 2
+def save_animation(result_dir, rho, vort, div, t, frame_indices, limits):
+    mid = rho.shape[1] // 2
     fig, axes = plt.subplots(1, 3, figsize=(12, 3.8), constrained_layout=True)
+    first = int(frame_indices[0])
     items = [
-        (rho[mid].T, r"Density $\rho$", "viridis", limits["density"]),
-        (vort[mid].T, r"Vorticity $|\omega|$", "magma", limits["vorticity"]),
-        (div[mid].T, r"Dilatation $\nabla\cdot v$", "coolwarm", limits["divergence"]),
+        (rho[first, mid].T, r"Density $\rho$", "viridis", limits["density"]),
+        (vort[first, mid].T, r"Vorticity $|\omega|$", "magma", limits["vorticity"]),
+        (div[first, mid].T, r"Dilatation $\nabla\cdot v$", "coolwarm", limits["divergence"]),
     ]
+    images = []
+    colorbars = []
     for ax, (field, title, cmap, (vmin, vmax)) in zip(axes, items):
         image = ax.imshow(field, origin="lower", cmap=cmap, vmin=vmin, vmax=vmax)
+        images.append(image)
         ax.set_title(title)
         ax.set_xlabel("y index")
         ax.set_ylabel("z index")
-        fig.colorbar(image, ax=ax, shrink=0.75)
-    fig.suptitle(f"3D compressible turbulence: central x-slice, t={time_value:.3f}")
-    fig.canvas.draw()
-    frame = np.asarray(fig.canvas.buffer_rgba())[..., :3].copy()
+        colorbars.append(fig.colorbar(image, ax=ax, shrink=0.75))
+    title = fig.suptitle(f"3D compressible turbulence: central x-slice, t={t[first]:.3f}")
+
+    freeze_figure_layout(fig, dpi=100)
+    colorbar_boxes = axes_pixel_boxes(fig, [colorbar.ax for colorbar in colorbars])
+    frames = []
+    for index in frame_indices:
+        index = int(index)
+        images[0].set_data(rho[index, mid].T)
+        images[1].set_data(vort[index, mid].T)
+        images[2].set_data(div[index, mid].T)
+        title.set_text(f"3D compressible turbulence: central x-slice, t={t[index]:.3f}")
+        frames.append(capture_rgb(fig))
+    save_fixed_palette_gif(
+        frames,
+        result_dir / "turbulence_evolution.gif",
+        duration_ms=650,
+        static_boxes=colorbar_boxes,
+    )
     plt.close(fig)
-    return frame
 
 
 def main() -> None:
@@ -219,8 +246,9 @@ def main() -> None:
         "vorticity": (0.0, float(np.percentile(vorticity, 99))),
         "divergence": (-div_limit, div_limit),
     }
-    frames = [render_frame(rho[index], vorticity[index], divergence[index], t[index], animation_limits) for index in frame_indices]
-    imageio.mimsave(result_dir / "turbulence_evolution.gif", frames, duration=0.65, loop=0)
+    save_animation(
+        result_dir, rho, vorticity, divergence, t, frame_indices, animation_limits
+    )
 
     mass_drift = abs(diagnostics[-1]["mass"] / diagnostics[0]["mass"] - 1)
     energy_drift = abs(diagnostics[-1]["total_energy"] / diagnostics[0]["total_energy"] - 1)

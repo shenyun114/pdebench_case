@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import h5py
@@ -13,8 +14,16 @@ import numpy as np
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib import animation  # noqa: E402
 from matplotlib.colors import Normalize  # noqa: E402
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPOSITORY_ROOT))
+from case_utils.animation import (  # noqa: E402
+    axes_pixel_boxes,
+    capture_rgb,
+    freeze_figure_layout,
+    save_fixed_palette_gif,
+)
 
 
 def radial_average(
@@ -294,8 +303,8 @@ def main() -> None:
     for axis in axes:
         axis.set(xlabel="x", ylabel="y")
         axis.set_aspect("equal")
-    fig.colorbar(depth_image, ax=axes[0], shrink=0.82, label="h")
-    fig.colorbar(speed_image, ax=axes[1], shrink=0.82, label="|u|")
+    depth_bar = fig.colorbar(depth_image, ax=axes[0], shrink=0.82, label="h")
+    speed_bar = fig.colorbar(speed_image, ax=axes[1], shrink=0.82, label="|u|")
     time_text = fig.suptitle("t = 0.00 | relative mass drift = 0.00e+00", fontsize=14)
 
     animation_indices = list(range(0, len(t), 2))
@@ -313,13 +322,17 @@ def main() -> None:
         )
         return depth_image, speed_image, quiver, time_text
 
-    movie = animation.FuncAnimation(
-        fig, update, frames=len(animation_indices), interval=80, blit=False
-    )
-    movie.save(
+    freeze_figure_layout(fig, dpi=105)
+    colorbar_boxes = axes_pixel_boxes(fig, [depth_bar.ax, speed_bar.ax])
+    frames = []
+    for frame_number in range(len(animation_indices)):
+        update(frame_number)
+        frames.append(capture_rgb(fig))
+    save_fixed_palette_gif(
+        frames,
         args.output / "shallow_water_evolution.gif",
-        writer=animation.PillowWriter(fps=12),
-        dpi=105,
+        duration_ms=83,
+        static_boxes=colorbar_boxes,
     )
     plt.close(fig)
     print(json.dumps(metrics, indent=2))
