@@ -1,5 +1,7 @@
 # PDEBench 科学计算案例：二维浅水波、二维反应–扩散与三维可压缩湍流
 
+> **上游来源：** 本文案例基于 [PDEBench 官方仓库](https://github.com/pdebench/PDEBench)及其 NeurIPS 2022 论文 [*PDEBench: An Extensive Benchmark for Scientific Machine Learning*](https://arxiv.org/abs/2210.07182)，使用上游提交 `4ff3e3a4aa1561721b5571fa3a048a0a463e0568`。本案例集并非 PDEBench 官方发行版。上游代码的版权、MIT License 和完整引用说明见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 与 [`CITATION.bib`](CITATION.bib)。
+
 ## 1. PDEBench 概述
 
 ### 1.1 PDEBench 简介

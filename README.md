@@ -2,6 +2,8 @@
 
 当前案例集包含三个物理与计算主题互补的主案例，以及两个附录。三个主案例都生成 PDE 数值解，不训练神经网络，因此没有 epoch 或 loss 曲线；Burgers/FNO 附录才包含 50 epoch 的模型训练。
 
+> **来源与署名：** 本案例集建立在 [PDEBench 官方代码仓库](https://github.com/pdebench/PDEBench)及论文 *PDEBench: An Extensive Benchmark for Scientific Machine Learning*（[arXiv:2210.07182](https://arxiv.org/abs/2210.07182)）之上，固定使用上游提交 `4ff3e3a4aa1561721b5571fa3a048a0a463e0568`。PDEBench 原代码版权归 NEC Labs Europe GmbH、Stuttgart University、CSIRO 及 PDEBench contributors 所有，并按 MIT License 发布。本仓库是独立编写的复现案例与调用封装，不是 PDEBench 官方仓库，也未获其作者或所属机构背书。详细的代码边界、版权与许可证说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)，论文 BibTeX 见 [CITATION.bib](CITATION.bib)。
+
 面向成果展示和连续阅读的正式版本见：[PDEBench 科学计算案例整合文档](PDEBENCH_INTEGRATED_CASES.md)。该文档从 PDEBench 的功能与应用出发，将三个主案例统一组织为“案例描述—前处理—算法设计与并行优化—后处理”，并只给出可独立执行的前处理、算法运行和后处理命令。各案例独立文档同时保留分阶段命令与一键流水线。
 
 ## 获取代码
@@ -43,6 +45,22 @@ export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 - 三个主案例均提供可在普通 CPU 环境执行的默认复现路径。
 
 [环境与复现补充说明](ENVIRONMENT_AND_REPRODUCTION.md)集中说明源码、数据盘环境和重复运行规则。[复现测试报告](REPRODUCIBILITY_REPORT.md)记录环境、运行路径、实测指标和源码完整性。[PDEBench 支持案例说明](PDEBENCH_SUPPORTED_CASES.md)列出固定提交还能生成的其他 PDE。
+
+## 引用 PDEBench
+
+若在研究、报告或成果中使用本案例集，请按 PDEBench 官方要求同时引用其原论文；可直接使用本仓库的 [`CITATION.bib`](CITATION.bib)：
+
+```bibtex
+@inproceedings{PDEBench2022,
+  author    = {Takamoto, Makoto and Praditia, Timothy and Leiteritz, Raphael and MacKinlay, Dan and Alesiani, Francesco and Pfl{\"u}ger, Dirk and Niepert, Mathias},
+  title     = {{PDEBench: An Extensive Benchmark for Scientific Machine Learning}},
+  year      = {2022},
+  booktitle = {36th Conference on Neural Information Processing Systems (NeurIPS 2022) Track on Datasets and Benchmarks},
+  url       = {https://arxiv.org/abs/2210.07182}
+}
+```
+
+本仓库只保存案例层代码、配置、兼容补丁、分析和展示结果；运行脚本会另行克隆官方 PDEBench 源码并固定到上述提交。凡直接来自或修改自 PDEBench 的内容继续适用其 MIT License 和原版权声明，不能因本仓库的整理、补丁或说明而取消原作者署名。
 
 ## 一眼看结果
 

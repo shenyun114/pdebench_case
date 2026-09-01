@@ -20,7 +20,9 @@ export PDEBENCH_ROOT="$PDEBENCH_CASE_DATA/pdebench-upstream/PDEBench"
 `pdebench_case` 不是 PDEBench 源码的替代品。两个仓库分工如下：
 
 - `pdebench_case`：保存可复现配置、上游调用封装、HDF5 转换、物理诊断、可视化和验收代码；
-- `pdebench/PDEBench`：提供实际的 PDE 数值求解器、初始条件、离散算子和 Hydra 配置。
+- [`pdebench/PDEBench`](https://github.com/pdebench/PDEBench)：提供实际的 PDE 数值求解器、初始条件、离散算子和 Hydra 配置，原代码按 MIT License 发布。
+
+本案例集独立于 PDEBench 官方项目。上游版权与许可证全文、代码边界和论文引用见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)；研究成果中请引用 [PDEBench 原论文](https://arxiv.org/abs/2210.07182)，可直接使用 [`CITATION.bib`](CITATION.bib)。
 
 用户不需要手动克隆 PDEBench。每个案例执行前处理命令时，`scripts/setup_workspace.sh` 会自动完成：
 
